@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Water Reservoir Dashboard 2026 — SCGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+/* ── RESERVOIR MAP ── */
+.res-map-wrap{position:relative;height:275px;border-radius:10px;overflow:hidden}
+.res-map-wrap .leaflet-container{background:#d4e8f0;height:100%!important}
+@keyframes res-pulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.2);opacity:0}}
+.res-tip{background:#1e293b!important;color:#f1f5f9!important;border:none!important;border-radius:6px!important;font-size:11px!important;font-weight:600!important;padding:3px 8px!important;box-shadow:0 2px 8px rgba(0,0,0,.3)!important}
+.res-tip::before{border-top-color:#1e293b!important}
+.res-tip-fd{opacity:0.35!important}
+/* ── BASE ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font:'IBM Plex Sans Thai','IBM Plex Sans',system-ui,'Segoe UI',sans-serif;
+  --font-num:'IBM Plex Sans','IBM Plex Sans Thai',system-ui,sans-serif;
+  --bg:#bfe5e3;--surface:#ffffff;--surface2:#f0f5f7;--border:#dde6ea;--border2:#c7d4da;
+  --text:#0f2a33;--text2:#37505a;--text3:#6d8893;
+  --accent:#0d9488;--accent2:#0891b2;--accent-bg:#d6f3ef;
+  --teal:#0891b2;--teal-bg:#cffafe;--green:#16a34a;--green-bg:#dcfce7;--amber:#d97706;--amber-bg:#fef3c7;--red:#dc2626;--red-bg:#fee2e2;--purple:#7c3aed;--purple-bg:#ede9fe;
+  --shadow:0 1px 2px rgba(13,80,90,.05),0 4px 14px rgba(13,80,90,.06);--shadow-sm:0 1px 3px rgba(13,80,90,.06);--radius:12px;
+  --dot:rgba(13,148,136,.10);
+  --topbar-bg:linear-gradient(120deg,#0d4f5b 0%,#0d6b78 100%);
+  --topbar-fg:#ffffff;--topbar-fg2:rgba(255,255,255,.6);--topbar-border:transparent;
+  --topbar-pill-bg:rgba(255,255,255,.12);--topbar-pill-fg:rgba(255,255,255,.9);--topbar-pill-border:rgba(255,255,255,.2);
+  --logo-bg:rgba(255,255,255,.15);--logo-fg:#ffffff;--logo-border:rgba(255,255,255,.25);
+  --tabs-bg:#ffffff;--tabs-border:#dde6ea;
+}
+/* actual table rows */
+.tr-actual{background:#f8f8fb}
+body.dark .tr-actual{background:rgba(45,212,191,.05)}
+
+/* ══ NIGHT MODE — bg stays teal, cards/charts go dark ══ */
+body.dark{
+  /* --bg stays #bfe5e3 — page background never changes */
+  --surface:#0b1118;--surface2:#111820;--border:#1d2a36;--border2:#253040;
+  --text:#dcf0f0;--text2:#9fc2c5;--text3:#6b9098;
+  --accent:#2dd4bf;--accent2:#22d3ee;--accent-bg:#0e3a38;
+  --teal:#22d3ee;--teal-bg:rgba(34,211,238,.15);--green:#4ade80;--green-bg:rgba(74,222,128,.15);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,.15);--red:#f87171;--red-bg:rgba(248,113,113,.15);--purple:#a78bfa;--purple-bg:rgba(167,139,250,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 3px 12px rgba(0,0,0,.35);--shadow-sm:0 1px 3px rgba(0,0,0,.4);
+}
+body.dark .card,
+body.dark .banner,
+body.dark .gauge-card,
+body.dark .ctrl-card,
+body.dark .sc-mgr,
+body.dark .inf-mini,
+body.dark .spark-card{background:var(--surface);border-color:var(--border);color:var(--text)}
+body.dark .banner-item{border-right-color:var(--border)}
+body.dark .sc-row{background:var(--surface2);border-color:var(--border)}
+body.dark .op-modal{background:var(--surface);border-color:var(--border)}
+body.dark select,body.dark input[type=number],body.dark input[type=range]{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+body.dark .hpill.green{background:rgba(74,222,128,.12);color:#4ade80;border-color:rgba(74,222,128,.25)}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;transition:background-color .3s ease,color .3s ease}
+.bv,.gp,.sc-val,.inf-mini-val,.spark-val,table,.rv,.sc-rv2,.op-inp{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.card,.banner,.gauge-card,.ctrl-card,.sc-mgr,.sc-row,.inf-mini,.spark-card,.tabs,.topbar{transition:background-color .3s ease,border-color .3s ease,color .3s ease,box-shadow .3s ease}
+
+/* dot-grid background */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(var(--dot) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+.page-wrap{position:relative;z-index:1}
+
+/* ── HEADER ── */
+.topbar{
+  background:var(--topbar-bg);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  position:sticky;top:0;z-index:100;border-bottom:1px solid var(--topbar-border);box-shadow:var(--shadow-sm);
+}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.logo{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  background:var(--logo-bg);border:1px solid var(--logo-border);
+  display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--logo-fg);
+}
+.topbar h1{font-size:16px;font-weight:700;color:var(--topbar-fg);letter-spacing:-.2px}
+.topbar .sub{font-size:11px;color:var(--topbar-fg2);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.hpill{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;
+  font-size:11px;font-weight:500;background:var(--topbar-pill-bg);
+  color:var(--topbar-pill-fg);border:1px solid var(--topbar-pill-border);
+}
+.hpill.green{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.3)}
+.pulse{width:7px;height:7px;border-radius:50%;background:#69db7c;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── FLOATING PILL TABS — from Prompt Design ── */
+.tab-wrap{
+  display:flex;justify-content:center;padding:14px 20px 0;
+  position:sticky;top:68px;z-index:99;
+}
+.tabs{
+  display:inline-flex;align-items:center;gap:2px;
+  background:var(--tabs-bg);border:1px solid var(--tabs-border);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-radius:50px;padding:4px;box-shadow:var(--shadow);
+}
+.tab{
+  padding:8px 20px;border:none;background:none;cursor:pointer;
+  font-size:12px;font-weight:500;color:var(--text2);border-radius:50px;
+  white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all .18s;
+}
+.tab:hover:not(.active){background:var(--surface2);color:var(--text)}
+#night-btn{width:30px;height:30px;padding:0;border-radius:8px;justify-content:center;font-size:15px;}
+.tab i{font-size:14px}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(59,91,219,.4)}
+
+/* ── LAYOUT ── */
+.page{padding:18px 24px 32px;max-width:1400px;margin:0 auto}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── BANNER STRIP ── */
+.banner{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:18px;
+}
+.banner-item{
+  padding:13px 16px;border-right:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.banner-item:last-child{border-right:none}
+.bi{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.bi-b{background:var(--accent-bg);color:var(--accent)}
+.bi-t{background:var(--teal-bg);color:var(--teal)}
+.bi-g{background:var(--green-bg);color:var(--green)}
+.bi-a{background:var(--amber-bg);color:var(--amber)}
+.bi-r{background:var(--red-bg);color:var(--red)}
+.bi-p{background:var(--purple-bg);color:var(--purple)}
+.bv{font-size:18px;font-weight:800;color:var(--text);line-height:1}
+.bl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+
+/* ── GAUGE ROW ── */
+.gauge-row{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.gauge-card{
+  flex:1;min-width:130px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  box-shadow:var(--shadow-sm);position:relative;
+}
+.gtag{position:absolute;top:7px;left:9px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.4px;text-transform:uppercase}
+.gtag-act{background:#e6f4ea;color:#2f7a3c}
+.gtag-fct{background:#fff4e6;color:#c96a00}
+.gl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.gauge-ring{position:relative;width:88px;height:88px}
+.gauge-ring svg{width:88px;height:88px;transform:rotate(-90deg)}
+.g-bg{fill:none;stroke:#e8ecf5;stroke-width:9}
+.g-fill{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .9s ease}
+.gi{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gp{font-size:17px;font-weight:800;line-height:1}
+.gm{font-size:10px;color:var(--text3)}
+.gc{font-size:10px;color:#b0bbd4}
+
+/* ── CARDS ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;
+  box-shadow:var(--shadow);margin-bottom:16px;
+}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.card-head i{font-size:16px;color:var(--text3)}
+.ctitle{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:860px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ── SCENARIO CARDS ── */
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:18px}
+.sc-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:13px;cursor:pointer;transition:all .15s;text-align:center;
+  box-shadow:var(--shadow-sm);
+}
+.sc-card:hover{border-color:var(--border2);background:var(--surface2)}
+.sc-card.active{border-color:var(--accent);border-width:2px;background:var(--accent-bg)}
+.sc-name{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px}
+.sc-val{font-size:18px;font-weight:800}
+.sc-pct{font-size:10px;color:var(--text3);margin-top:2px}
+.sc-bar{height:3px;border-radius:2px;background:var(--surface2);margin-top:9px;overflow:hidden}
+.sc-bar-fill{height:100%;border-radius:2px}
+
+/* ── CONTROLS ── */
+.ctrl-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;margin-bottom:18px;
+  box-shadow:var(--shadow-sm);
+}
+.ctrl-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.ctrl-row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+.cg{display:flex;flex-direction:column;gap:6px;min-width:150px}
+.cg label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.cg select{
+  border:1px solid var(--border2);border-radius:8px;padding:8px 12px;
+  font-size:12px;color:var(--text);background:var(--surface);cursor:pointer;outline:none;
+  transition:border-color .15s;
+}
+.cg select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,91,219,.12)}
+.rw{display:flex;align-items:center;gap:10px}
+.cg input[type=range]{width:150px;accent-color:var(--accent);cursor:pointer}
+.rv{font-size:15px;font-weight:800;color:var(--accent);min-width:46px}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{
+  padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;border:1px solid var(--border2);background:var(--surface);
+  color:var(--text2);transition:all .15s;
+}
+.btn:hover{background:var(--surface2);border-color:var(--border2)}
+.btn.p{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(59,91,219,.3)}
+.btn.p:hover{background:#2f4bc7}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{background:var(--surface2)}
+th{padding:9px 12px;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;text-align:center;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;text-align:center;border-bottom:1px solid #f0f2f8;font-size:12px}
+tbody tr:hover td{background:#f8f9fd}
+.tdm{font-weight:700;color:var(--text);text-align:left}
+.tdh{color:var(--teal);font-weight:700}
+.tdl{color:var(--red);font-weight:600}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.2px}
+.b-ok{background:var(--green-bg);color:var(--green)}
+.b-warn{background:var(--amber-bg);color:var(--amber)}
+.b-crit{background:var(--red-bg);color:var(--red)}
+.mbar{height:3px;border-radius:2px;background:#edf0f7;margin-top:3px;overflow:hidden}
+.mbar-f{height:100%;border-radius:2px;transition:width .4s}
+/* tfoot totals row */
+tfoot .tbl-total{background:var(--accent-bg);border-top:2px solid var(--accent)}
+tfoot .tbl-total td{color:var(--text);font-size:12px;padding:8px 12px;border-bottom:none}
+body.dark tfoot .tbl-total{background:rgba(45,212,191,.07)}
+/* ── TABLE SCENARIO SELECTOR ── */
+.tbl-sc-sel{display:flex;gap:6px;padding:8px 12px 4px;flex-wrap:wrap}
+.tsc-pill{padding:3px 14px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid var(--sc-col,var(--border2));color:var(--sc-col,var(--text2));background:transparent;cursor:pointer;transition:background .15s,color .15s;font-family:var(--font)}
+.tsc-pill.active{background:var(--sc-col,var(--accent));color:#fff;border-color:var(--sc-col,var(--accent))}
+.tsc-pill:hover:not(.active){background:color-mix(in srgb,var(--sc-col,#aaa) 12%,transparent)}
+/* ── INFLOW SUMMARY STRIP ── */
+.inf-summ-wrap{padding:6px 10px 4px;display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--border)}
+.iss-row{display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap}
+.iss-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.iss-lbl{font-weight:700;color:var(--text)}
+.iss-src{color:var(--text3);font-size:10px}
+.iss-tot{margin-left:auto;font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums}
+.iss-diff{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.iss-diff.pos{background:var(--green-bg);color:var(--green)}
+.iss-diff.neg{background:var(--red-bg);color:var(--red)}
+
+/* ── SPARKLINES ── */
+.spark-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:18px}
+.spark-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm);overflow:hidden;
+  position:relative;
+}
+.spark-card::before{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--accent-bg) 0%,transparent 60%);opacity:.4;
+}
+.spark-label{font-size:11px;color:var(--text3);font-weight:600;position:relative}
+.spark-val{font-size:21px;font-weight:800;color:var(--text);margin:3px 0;position:relative}
+.spark-sub{font-size:10px;color:var(--text3);position:relative}
+
+/* ── SECTION HEAD ── */
+.sec{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;
+  margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── SIM MONTH SLIDERS ── */
+#sim-month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.sm-card{background:var(--surface2);border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
+.sm-mo{font-size:11px;font-weight:700;color:var(--text2)}
+.sm-base{font-size:10px;color:var(--text3);margin-bottom:5px}
+.sm-row{display:flex;align-items:center;gap:8px}
+.sm-row input[type=range]{flex:1;accent-color:var(--accent)}
+.sm-val{font-size:12px;font-weight:800;color:var(--accent);min-width:36px;text-align:right}
+
+/* ── YEAR LEGEND ── */
+.yl-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.yl{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+.yl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.yl-line{width:18px;height:2px;flex-shrink:0}
+.yl-actual{background:#111}
+body.dark .yl-actual{background:#f0f0f0}
+
+/* ── SCENARIO MANAGER ── */
+.sc-mgr{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:18px;box-shadow:var(--shadow-sm)}
+.sc-mgr-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sc-mgr-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px}
+.add-sc-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1.5px dashed var(--border2);background:none;cursor:pointer;font-size:11px;font-weight:600;color:var(--text3);transition:all .15s}
+.add-sc-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.sc-row{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:9px}
+.sc-row:last-child{margin-bottom:0}
+.sc-row-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.sc-dot2{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.sc-lbl2{font-size:12px;font-weight:700;min-width:90px}
+.sc-mtplbl{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase}
+.sc-mtp-range{width:120px;accent-color:var(--accent)}
+.sc-rv2{font-size:13px;font-weight:800;min-width:42px}
+.sc-rm{border:1px solid var(--border2);background:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--text3);margin-left:auto;line-height:1.8}
+.sc-rm:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.sc-months{display:grid;grid-template-columns:repeat(12,1fr);gap:5px}
+.sc-mo{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sc-mo-lbl{font-size:9px;color:var(--text3);font-weight:600}
+.sc-mo select{width:100%;border:1px solid var(--border2);border-radius:5px;padding:2px 1px;font-size:9px;color:var(--text);background:var(--surface);cursor:pointer;text-align:center}
+.sc-mo.actual .sc-mo-lbl{color:#bbb}
+.sc-mo.actual select{display:none}
+.mo-act-tag{font-size:9px;color:#bbb;font-weight:500;font-style:italic}
+
+/* ── OUTFLOW ROW ── */
+.sc-out-row{display:flex;align-items:center;gap:9px;padding:9px 0 2px;border-top:1px dashed var(--border);margin-top:9px;flex-wrap:wrap}
+.sc-out-icon{font-size:13px;color:var(--red);opacity:.7}
+.sc-out-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.sc-out-inp-wrap{display:flex;align-items:center;gap:5px;background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;padding:4px 10px;transition:border-color .15s}
+.sc-out-inp-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,91,219,.1)}
+.sc-out-inp{width:70px;border:none;outline:none;font-size:13px;font-weight:800;color:var(--text);text-align:right;background:transparent}
+.sc-out-unit{font-size:10px;color:var(--text3);white-space:nowrap}
+.sc-out-hint{font-size:10px;color:var(--text3)}
+.sc-out-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;margin-left:auto;white-space:nowrap}
+.sc-out-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.inf-sel{font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text2);cursor:pointer}
+.yr-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.sc-yr2-div{font-size:10px;font-weight:700;color:#6b7a9e;padding:4px 6px 2px;border-top:1px dashed rgba(80,80,140,.3);margin:4px 0 0;text-align:center}
+.yr-btn{font-size:11px;font-weight:600;padding:4px 11px;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:background .15s,color .15s}
+.yr-btn.active{background:var(--accent);color:#fff}
+.yr-btn:not(.active):hover{background:var(--surface2)}
+.grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+.inf-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;box-shadow:var(--shadow-sm);overflow:hidden}
+.inf-mini-lbl{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inf-mini-val{font-size:17px;font-weight:800;color:var(--text);line-height:1.1}
+.inf-mini-sub{font-size:9px;color:var(--text3);margin-bottom:3px}
+.sc-sel-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sc-sel-item{display:flex;align-items:center;gap:4px}
+.sc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sc-out-sep{width:1px;height:22px;background:var(--border2);margin:0 6px;flex-shrink:0}
+.sc-out-btn i{font-size:13px}
+
+/* ── OUTFLOW POPUP ── */
+.op-overlay{position:fixed;inset:0;background:rgba(15,23,41,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
+.op-overlay.open{display:flex}
+.op-modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;box-shadow:0 24px 80px rgba(10,20,60,.3);width:100%;max-width:900px;overflow:hidden;animation:popIn .2s cubic-bezier(.16,1,.3,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.95) translateY(12px)}to{opacity:1;transform:none}}
+.op-header{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--surface) 60%,var(--surface2) 100%)}
+.op-title{font-size:15px;font-weight:800;color:var(--text)}
+.op-subtitle{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.5}
+.op-close{border:1px solid var(--border2);background:none;border-radius:8px;padding:4px 11px;cursor:pointer;font-size:14px;color:var(--text3);line-height:1.8;transition:all .15s;flex-shrink:0}
+.op-close:hover{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+.op-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;padding:20px 24px}
+.op-cell{border-radius:11px;padding:11px 8px 9px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;transition:border-color .15s}
+.op-actual{background:var(--surface2);border:1px solid var(--border);opacity:.65}
+.op-forecast{background:#fff;border:2px solid var(--border2)}
+.op-forecast:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(201,42,42,.1)}
+.op-mo{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.op-locked{font-size:13px;font-weight:700;color:var(--text3);display:flex;align-items:center;gap:3px;margin:2px 0}
+.op-lock-icon{font-size:10px;opacity:.45}
+.op-inp{width:100%;border:none;outline:none;font-size:16px;font-weight:800;color:var(--text);text-align:center;background:transparent;padding:2px 0;margin:1px 0}
+.op-inp::-webkit-inner-spin-button,.op-inp::-webkit-outer-spin-button{opacity:.4}
+.op-unit{font-size:9px;color:var(--text3);letter-spacing:.2px}
+.op-monthly{font-size:9px;font-weight:600;color:var(--teal);background:var(--teal-bg);border-radius:5px;padding:2px 6px;margin-top:2px}
+.op-cascade-hint{font-size:8px;color:var(--accent);opacity:.6;margin-top:1px}
+.op-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--border);background:var(--surface2)}
+.op-footer-note{font-size:10px;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ════ HEADER ════ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo"><i class="ti ti-droplet-half-2" aria-hidden="true"></i></div>
+    <div>
+      <div class="topbar-left" style="gap:8px">
+        <h1>Water Reservoir Dashboard</h1>
+        <span class="hpill">2026</span>
+      </div>
+      <div class="sub">RY Watershed · Water Level Forecast & Scenario Planning</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="hpill" id="night-btn" onclick="toggleNight()" style="cursor:pointer" title="สลับ Night Mode"><i class="ti ti-moon" aria-hidden="true"></i></button>
+    <span class="hpill green"><span class="pulse"></span>Live</span>
+    <span class="hpill"><i class="ti ti-calendar-event" style="font-size:13px" aria-hidden="true"></i>8 มิ.ย. 2569</span>
+    <span class="hpill"><i class="ti ti-chart-line" style="font-size:13px" aria-hidden="true"></i>Jan–Dec 2026</span>
+  </div>
+</div>
+
+<!-- ════ FLOATING PILL TABS ════ -->
+<div class="tab-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="goTab('dk',this)"><i class="ti ti-mountain" aria-hidden="true"></i>3อ่าง (DK/KY/NPL)</button>
+    <button class="tab" onclick="goTab('ps',this)"><i class="ti ti-waves" aria-hidden="true"></i>ประแสร์ (PS)</button>
+    <button class="tab" onclick="goTab('inflow',this)"><i class="ti ti-chart-bar" aria-hidden="true"></i>Inflow</button>
+    <button class="tab" onclick="goTab('out',this)"><i class="ti ti-arrow-up-circle" aria-hidden="true"></i>Outflow</button>
+  </div>
+</div>
+
+<!-- ════ CONTENT ════ -->
+<div class="page">
+
+<!-- ── TAB: 3อ่าง ── -->
+<div id="tp-dk" class="tab-panel active">
+  <div class="banner" id="banner-dk"></div>
+  <div class="gauge-row" id="gauges-dk"></div>
+  <div class="grid-2" style="grid-template-columns:1fr 2fr">
+    <div class="card">
+      <div class="card-head"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="ctitle">ที่ตั้งอ่างเก็บน้ำ — 3อ่าง (DK / KY / NPL)</span></div>
+      <div class="res-map-wrap" id="map-dk"></div>
+    </div>
+    <div class="card">
+      <div class="card-head" style="justify-content:space-between">
+        <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">Water level forecast — 3อ่างฯ (MCM) · สีพื้น = เกณฑ์รายเดือน</span></span>
+        <div class="yr-toggle">
+          <button id="dk-yr1-btn" class="yr-btn active" onclick="setSimYears('dk',1)">1 ปี</button>
+          <button id="dk-yr2-btn" class="yr-btn" onclick="setSimYears('dk',2)">2 ปี</button>
+        </div>
+      </div>
+      <div style="position:relative;height:275px"><canvas id="c-dk-lv" role="img" aria-label="DK water level forecast">DK level chart</canvas></div>
+      <div id="dk-lvleg" class="yl-row"></div>
+    </div>
+  </div>
+  <div class="sc-mgr">
+    <div class="sc-mgr-head">
+      <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Forecast scenarios — เลือก Inflow แต่ละเดือนจากปีที่มี (สูงสุด 4 Scenarios)</div>
+      <button id="dk-add-sc" class="add-sc-btn" onclick="addSc('dk')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
+    </div>
+    <div id="dk-sc-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="ctitle">Inflow comparison — by scenario (MCM/เดือน)</span></div>
+    <div style="position:relative;height:180px"><canvas id="c-dk-cmp" role="img" aria-label="Scenario inflow comparison">Scenario inflow compare</canvas></div>
+    <div id="dk-inf-summ" class="inf-summ-wrap"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><i class="ti ti-table" aria-hidden="true"></i><span class="ctitle">Monthly water balance — 3อ่าง (DK+KY+NPL)</span></div>
+    <div id="dk-tbl-sc-sel" class="tbl-sc-sel"></div>
+    <div class="tbl-wrap"><table id="tbl-dk"></table></div>
+  </div>
+</div>
+
+<!-- ── TAB: PS MTP ── -->
+<div id="tp-ps" class="tab-panel">
+  <div class="banner" id="banner-ps"></div>
+  <div class="gauge-row" id="gauges-ps"></div>
+  <div class="grid-2" style="grid-template-columns:1fr 2fr">
+    <div class="card">
+      <div class="card-head"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="ctitle">ที่ตั้งอ่างเก็บน้ำ — ประแสร์ (PS)</span></div>
+      <div class="res-map-wrap" id="map-ps"></div>
+    </div>
+    <div class="card">
+      <div class="card-head" style="justify-content:space-between">
+        <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">Water level forecast — ประแสร์ (MCM) · สีพื้น = เกณฑ์รายเดือน</span></span>
+        <div class="yr-toggle">
+          <button id="ps-yr1-btn" class="yr-btn active" onclick="setSimYears('ps',1)">1 ปี</button>
+          <button id="ps-yr2-btn" class="yr-btn" onclick="setSimYears('ps',2)">2 ปี</button>
+        </div>
+      </div>
+      <div style="position:relative;height:275px"><canvas id="c-ps-lv" role="img" aria-label="PS water level forecast">PS level</canvas></div>
+      <div id="ps-lvleg" class="yl-row"></div>
+    </div>
+  </div>
+  <div class="sc-mgr">
+    <div class="sc-mgr-head">
+      <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Forecast scenarios — เลือก Climate scenario แต่ละเดือน (สูงสุด 4 Scenarios)</div>
+      <button id="ps-add-sc" class="add-sc-btn" onclick="addSc('ps')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
+    </div>
+    <div id="ps-sc-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="ctitle">Inflow comparison — by scenario (MCM/เดือน)</span></div>
+    <div style="position:relative;height:180px"><canvas id="c-ps-cmp" role="img" aria-label="PS scenario inflow comparison">PS scenario inflow compare</canvas></div>
+    <div id="ps-inf-summ" class="inf-summ-wrap"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><i class="ti ti-table" aria-hidden="true"></i><span class="ctitle">Monthly water balance — PS</span></div>
+    <div id="ps-tbl-sc-sel" class="tbl-sc-sel"></div>
+    <div class="tbl-wrap"><table id="tbl-ps"></table></div>
+  </div>
+</div>
+
+<!-- ── TAB: INFLOW ── -->
+<div id="tp-inflow" class="tab-panel">
+  <!-- 6 summary spark cards in one row -->
+  <div class="grid-6">
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">3อ่าง — เฉลี่ย 10 ปี</div>
+      <div class="inf-mini-val" id="sv-3tk-avg">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-3tk-avg"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">3อ่าง — ปีก่อนหน้า</div>
+      <div class="inf-mini-val" id="sv-3tk-prev">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-3tk-prev"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">3อ่าง — ปีน้อยที่สุด</div>
+      <div class="inf-mini-val" id="sv-3tk-dry">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-3tk-dry"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">ประแสร์ — เฉลี่ย 10 ปี</div>
+      <div class="inf-mini-val" id="sv-ps-avg">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-ps-avg"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">ประแสร์ — ปีก่อนหน้า</div>
+      <div class="inf-mini-val" id="sv-ps-prev">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-ps-prev"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">ประแสร์ — ปีน้อยที่สุด</div>
+      <div class="inf-mini-val" id="sv-ps-dry">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-ps-dry"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 3อ่าง main chart + 3 scenario selectors -->
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">3อ่าง monthly inflow — DK+KY+NPL (MCM)</span></span>
+      <div class="yr-toggle" id="inf-mode-dk-btns">
+        <button class="yr-btn active" onclick="setInfMode('dk','all')">ทุกปี</button>
+        <button class="yr-btn" onclick="setInfMode('dk','sc')">เลือก Scenario</button>
+      </div>
+    </div>
+    <div style="position:relative;height:250px"><canvas id="c-3tk" role="img" aria-label="3-reservoir combined inflow">3-tank inflow</canvas></div>
+    <div id="inf-sc-mgr-dk" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
+      <div class="sc-mgr-head" style="margin-bottom:8px">
+        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
+        <button id="inf-sc-add-dk" class="add-sc-btn" onclick="addInflowSc('dk')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
+      </div>
+      <div id="inf-sc-list-dk"></div>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-head"><i class="ti ti-droplet" aria-hidden="true"></i><span class="ctitle">DK inflow (MCM)</span></div>
+      <div style="position:relative;height:180px"><canvas id="c-dki" role="img" aria-label="DK inflow">DK</canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><i class="ti ti-droplet" aria-hidden="true"></i><span class="ctitle">KY inflow (MCM)</span></div>
+      <div style="position:relative;height:180px"><canvas id="c-kyi" role="img" aria-label="KY inflow">KY</canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><i class="ti ti-droplet" aria-hidden="true"></i><span class="ctitle">NPL inflow (MCM)</span></div>
+      <div style="position:relative;height:180px"><canvas id="c-npli" role="img" aria-label="NPL inflow">NPL</canvas></div>
+    </div>
+  </div>
+
+  <!-- PS main chart + 3 scenario selectors -->
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">ประแสร์ (PS) monthly inflow (MCM)</span></span>
+      <div class="yr-toggle" id="inf-mode-ps-btns">
+        <button class="yr-btn active" onclick="setInfMode('ps','all')">ทุกปี</button>
+        <button class="yr-btn" onclick="setInfMode('ps','sc')">เลือก Scenario</button>
+      </div>
+    </div>
+    <div style="position:relative;height:250px"><canvas id="c-psi" role="img" aria-label="PS inflow">PS inflow</canvas></div>
+    <div id="inf-sc-mgr-ps" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
+      <div class="sc-mgr-head" style="margin-bottom:8px">
+        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
+        <button id="inf-sc-add-ps" class="add-sc-btn" onclick="addInflowSc('ps')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
+      </div>
+      <div id="inf-sc-list-ps"></div>
+    </div>
+  </div>
+
+  <!-- Summary table -->
+  <div class="card">
+    <div class="card-head"><i class="ti ti-table" aria-hidden="true"></i><span class="ctitle">สรุป Inflow รายเดือน (MCM)</span></div>
+    <div class="tbl-wrap" id="inf-tbl-wrap"></div>
+  </div>
+</div>
+
+<!-- ── TAB: OUTFLOW ── -->
+<div id="tp-out" class="tab-panel">
+  <!-- 6 summary spark cards -->
+  <div class="grid-6">
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">3อ่าง — เฉลี่ย 10 ปี</div>
+      <div class="inf-mini-val" id="sv-3tko-avg">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-3tko-avg2"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">3อ่าง — ปีก่อนหน้า</div>
+      <div class="inf-mini-val" id="sv-3tko-prev">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-3tko-prev2"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">3อ่าง — ปีสูงสุด</div>
+      <div class="inf-mini-val" id="sv-3tko-peak">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-3tko-peak2"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">ประแสร์ — เฉลี่ย 10 ปี</div>
+      <div class="inf-mini-val" id="sv-pso-avg">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-pso-avg2"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">ประแสร์ — ปีก่อนหน้า</div>
+      <div class="inf-mini-val" id="sv-pso-prev">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-pso-prev2"></canvas></div>
+    </div>
+    <div class="inf-mini">
+      <div class="inf-mini-lbl">ประแสร์ — ปีสูงสุด</div>
+      <div class="inf-mini-val" id="sv-pso-peak">—</div>
+      <div class="inf-mini-sub">MCM/ปี</div>
+      <div style="position:relative;height:38px"><canvas id="c-pso-peak2"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 3อ่าง main outflow chart + dropdown + 3 selectors -->
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">3อ่าง monthly outflow — DK+KY+NPL (MCM)</span></span>
+      <div class="yr-toggle" id="out-mode-dk-btns">
+        <button class="yr-btn active" onclick="setOutMode('dk','all')">ทุกปี</button>
+        <button class="yr-btn" onclick="setOutMode('dk','sc')">เลือก Scenario</button>
+      </div>
+    </div>
+    <div style="position:relative;height:250px"><canvas id="c-3tko" role="img" aria-label="3อ่าง outflow combined">3อ่าง outflow</canvas></div>
+    <div id="out-sc-mgr-dk" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
+      <div class="sc-mgr-head" style="margin-bottom:8px">
+        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
+        <button id="out-sc-add-dk" class="add-sc-btn" onclick="addOutflowSc('dk')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
+      </div>
+      <div id="out-sc-list-dk"></div>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-head"><i class="ti ti-droplet-off" aria-hidden="true"></i><span class="ctitle">DK outflow (MCM)</span></div>
+      <div style="position:relative;height:180px"><canvas id="c-dko" role="img" aria-label="DK outflow">DKo</canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><i class="ti ti-droplet-off" aria-hidden="true"></i><span class="ctitle">KY outflow (MCM)</span></div>
+      <div style="position:relative;height:180px"><canvas id="c-kyo" role="img" aria-label="KY outflow">KYo</canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><i class="ti ti-droplet-off" aria-hidden="true"></i><span class="ctitle">NPL outflow (MCM)</span></div>
+      <div style="position:relative;height:180px"><canvas id="c-nplo" role="img" aria-label="NPL outflow">NPLo</canvas></div>
+    </div>
+  </div>
+
+  <!-- PS outflow chart + dropdown + 3 selectors -->
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">ประแสร์ (PS) monthly outflow (MCM)</span></span>
+      <div class="yr-toggle" id="out-mode-ps-btns">
+        <button class="yr-btn active" onclick="setOutMode('ps','all')">ทุกปี</button>
+        <button class="yr-btn" onclick="setOutMode('ps','sc')">เลือก Scenario</button>
+      </div>
+    </div>
+    <div style="position:relative;height:250px"><canvas id="c-pso" role="img" aria-label="PS outflow">PS outflow</canvas></div>
+    <div id="out-sc-mgr-ps" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
+      <div class="sc-mgr-head" style="margin-bottom:8px">
+        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
+        <button id="out-sc-add-ps" class="add-sc-btn" onclick="addOutflowSc('ps')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
+      </div>
+      <div id="out-sc-list-ps"></div>
+    </div>
+  </div>
+
+  <!-- Summary table -->
+  <div class="card">
+    <div class="card-head"><i class="ti ti-table" aria-hidden="true"></i><span class="ctitle">สรุป Outflow รายเดือน (MCM)</span></div>
+    <div class="tbl-wrap" id="out-tbl-wrap"></div>
+  </div>
+</div>
+
+</div><!-- /page -->
+</div><!-- /page-wrap -->
+
+<!-- ════ OUTFLOW POPUP ════ -->
+<div id="op-overlay" class="op-overlay" onclick="if(event.target===this)closePopup(false)">
+  <div class="op-modal">
+    <div class="op-header">
+      <div>
+        <div class="op-title" id="op-title">ปรับ Outflow รายเดือน</div>
+        <div class="op-subtitle" id="op-subtitle"></div>
+      </div>
+      <button class="op-close" onclick="closePopup(false)" title="ปิด">✕</button>
+    </div>
+    <div class="op-grid" id="op-grid"></div>
+    <div class="op-footer">
+      <span class="op-footer-note"><i class="ti ti-info-circle" aria-hidden="true"></i> เปลี่ยนเดือนใด → เดือนถัดไปทั้งหมดจะปรับตาม</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="resetScOutflow()"><i class="ti ti-refresh" aria-hidden="true"></i> รีเซ็ตค่าเดิม</button>
+        <button class="btn p" onclick="closePopup(true)"><i class="ti ti-check" aria-hidden="true"></i> บันทึก & ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ DATA ══
+const MO=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
+const DK_MAX=79.411,DK_INIT=73.965,PS_MAX=330,PS_INIT=271.53;
+const DK_OUT=[0.93,0.87,0.93,.90,0.93,0.66,0.93,0.93,.90,0.93,.90,0.93];
+let PS_OUT=[36.54,32.31,36.05,32.16,21.91,16.375,19.80,19.38,16.42,19.05,28.73,29.69];
+let DK_IN={avg:[2.968,2.616,4.242,5.842,12.327,8.544,10.089,8.620,21.270,33.911,15.374,7.014],y55:[15.391,8.808,4.716,7.675,17.075,6.954,7.052,5.727,17.683,35.438,18.060,11.306],y62:[2.489,2.313,1.589,2.582,4.676,9.283,4.282,2.432,6.721,14.871,4.400,1.707]};
+let THREE_IN={avg:[14.034,11.940,16.032,23.653,45.577,34.142,43.091,36.683,75.545,97.769,41.244,18.817],y55:[25.667,16.537,15.723,19.424,49.805,18.025,25.328,28.545,117.735,104.591,52.841,26.836],y62:[12.533,12.954,15.650,19.443,23.871,38.026,18.940,14.744,37.973,43.198,15.704,8.537]};
+// ══ 3อ่าง COMBINED (DK+KY+NPL) ══
+// KY: MAX=51.1, INIT=25.573, out=[13.64,12.32,13.64,13.2,13.64,13.2,13.64,13.64,13.2,13.64,13.2,13.64]
+// NPL: MAX=187.62, INIT=148.64, out=[22.63,20.44,22.63,21.9,22.63,21.9,22.63,22.63,21.9,22.63,21.9,22.63]
+const THREE_MAX=318.131, THREE_INIT=248.178;
+let THREE_ACT_JUN=152.058; // updated by loadDataJson()
+let PS_ACT_JUN=156.08;
+// Star position: today's fraction through the current report month
+let STAR_MONTH_IDX=5; // updated by loadDataJson() to last month with actual data
+const _dnow=new Date(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
+let THREE_OUT=[37.20,33.63,37.20,36.00,37.20,35.76,37.20,37.20,36.00,37.20,36.00,37.20];
+let KY_IN={avg:[4.363,3.672,3.951,4.369,9.750,8.119,12.507,9.595,16.084,16.742,8.238,5.626],y55:[4.337,3.333,3.168,3.124,8.983,3.812,9.285,14.423,70.031,29.089,16.597,2.796],y62:[3.602,4.627,9.621,10.113,6.386,6.330,4.093,8.149,14.119,9.518,3.647,0.800]};
+let NPL_IN={avg:[6.703,5.652,7.839,13.443,23.500,17.479,20.495,18.468,38.191,47.116,17.633,6.176],y55:[5.939,4.396,7.839,8.625,23.747,7.259,8.992,8.395,30.021,40.064,18.185,12.733],y62:[6.442,6.013,4.439,6.747,12.810,22.412,10.564,4.163,17.133,18.809,7.657,6.030]};
+let PS_IN={avg:[1.127,.950,2.534,6.359,20.518,17.829,27.490,41.332,71.593,56.400,6.583,.693],ssp3_2030:[1.060,.893,2.382,5.978,19.287,16.759,25.841,38.852,67.297,53.016,6.188,.651],ssp3_2050:[.968,.816,2.176,5.461,17.619,15.310,23.606,35.492,61.477,48.431,5.653,.595],ssp5_2030:[1.080,.910,2.426,6.090,19.650,17.075,26.327,39.583,68.564,54.014,6.304,.663],ssp5_2050:[1.071,.902,2.407,6.041,19.490,16.936,26.113,39.261,68.006,53.574,6.253,.658],y62:[0,0,5.600,3.560,15.540,27.320,18.560,31.900,33.310,15.860,.300,0]};
+
+// ══ CRITERIA (Hard Red / Red / Yellow thresholds per month) ══
+// DK 3อ่าง
+const DK_CRIT=[
+  {hr:31.7,r:110,y:220},{hr:31.7,r:90,y:200},{hr:31.7,r:70,y:180},
+  {hr:31.7,r:65,y:175},{hr:31.7,r:60,y:170},{hr:31.7,r:65,y:175},
+  {hr:31.7,r:70,y:180},{hr:31.7,r:90,y:200},{hr:31.7,r:100,y:210},
+  {hr:31.7,r:110,y:220},{hr:31.7,r:120,y:230},{hr:31.7,r:115,y:225}
+];
+// PS ประแสร์
+const PS_CRIT=[
+  {hr:20,r:90,y:250},{hr:20,r:75,y:235},{hr:20,r:43,y:220},
+  {hr:20,r:43,y:200},{hr:20,r:43,y:200},{hr:20,r:43,y:200},
+  {hr:20,r:43,y:200},{hr:20,r:60,y:216},{hr:20,r:90,y:250},
+  {hr:20,r:90,y:250},{hr:20,r:90,y:250},{hr:20,r:90,y:250}
+];
+
+// ══ BACKGROUND BAND PLUGIN ══
+const bandPlugin={
+  id:'bandPlugin',
+  beforeDatasetsDraw(chart,args,opt){
+    const{ctx,chartArea,scales}=chart;
+    if(!chartArea||!opt||!opt.crit) return;
+    const{left,right,top,bottom}=chartArea;
+    const xS=scales.x,yS=scales.y,n=opt.crit.length;
+    ctx.save();
+    ctx.beginPath();ctx.rect(left,top,right-left,bottom-top);ctx.clip();
+    for(let i=0;i<n;i++){
+      const c=opt.crit[i];
+      const x0=i===0?left:(xS.getPixelForValue(i-1)+xS.getPixelForValue(i))/2;
+      const x1=i===n-1?right:(xS.getPixelForValue(i)+xS.getPixelForValue(i+1))/2;
+      const w=x1-x0;
+      const yBot=Math.min(bottom,yS.getPixelForValue(0));
+      const yHR=Math.max(top,yS.getPixelForValue(c.hr));
+      const yR=Math.max(top,yS.getPixelForValue(c.r));
+      const yY=Math.max(top,yS.getPixelForValue(c.y));
+      // Dead storage band
+      if(yBot>yHR){ctx.fillStyle='rgba(180,0,0,.2)';ctx.fillRect(x0,yHR,w,yBot-yHR);}
+      // Red band
+      if(yHR>yR){ctx.fillStyle='rgba(255,80,80,.16)';ctx.fillRect(x0,yR,w,yHR-yR);}
+      // Yellow band
+      if(yR>yY){ctx.fillStyle='rgba(255,200,0,.18)';ctx.fillRect(x0,yY,w,yR-yY);}
+    }
+    ctx.restore();
+  }
+};
+Chart.register(bandPlugin);
+
+Chart.register({
+  id:'deadLabelPlugin',
+  afterDraw(chart){
+    const opt=chart.options.plugins&&chart.options.plugins.deadLabelPlugin;
+    if(!opt) return;
+    const{ctx,chartArea,scales}=chart;
+    if(!chartArea) return;
+    const{left,bottom,top}=chartArea;
+    const yS=scales.y;
+    ctx.save();
+    ctx.textBaseline='middle';
+    ctx.textAlign='left';
+    // Dead storage label — left side, vertically centred in dead band
+    if(opt.value){
+      const yTop=yS.getPixelForValue(opt.value);
+      const yBot=Math.min(bottom,yS.getPixelForValue(0));
+      const yMid=(yTop+yBot)/2;
+      const dk=document.body.classList.contains('dark');
+      ctx.font='bold 10px system-ui,sans-serif';
+      ctx.fillStyle=dk?'rgba(255,130,130,.9)':'rgba(120,0,0,0.65)';
+      ctx.fillText(opt.text||(opt.value+' MCM'),left+7,yMid);
+    }
+    // Max capacity label — left side, on the dashed line
+    if(opt.maxCap){
+      const yLine=yS.getPixelForValue(opt.maxCap.value);
+      const dk=document.body.classList.contains('dark');
+      ctx.font='bold 10px system-ui,sans-serif';
+      ctx.fillStyle=dk?'rgba(255,130,130,.9)':'rgba(180,40,40,0.75)';
+      ctx.fillText(opt.maxCap.text,left+7,yLine-7);
+    }
+    ctx.restore();
+  }
+});
+
+// ══ HELPERS ══
+const r2=v=>Math.round(v*100)/100;
+const f=(v,d=1)=>v==null?'—':v.toFixed(d);
+const pct=(v,m)=>Math.min(100,Math.max(0,Math.round(v/m*100)));
+const sum=a=>a.reduce((s,x)=>s+x,0);
+const CH={};
+function kc(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
+// ── per-tank table scenario state ──
+let _dkAllData=[],_dkTblSc=0;
+let _psAllData=[],_psTblSc=0;
+function showDKTbl(idx){
+  _dkTblSc=idx;
+  document.querySelectorAll('#dk-tbl-sc-sel .tsc-pill').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  if(_dkAllData[idx]) document.getElementById('tbl-dk').innerHTML=mkTbl(_dkAllData[idx],THREE_MAX,DK_CRIT);
+}
+function showPSTbl(idx){
+  _psTblSc=idx;
+  document.querySelectorAll('#ps-tbl-sc-sel .tsc-pill').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  if(_psAllData[idx]) document.getElementById('tbl-ps').innerHTML=mkTbl(_psAllData[idx],PS_MAX,PS_CRIT);
+}
+function sm(rid,vid,v){document.getElementById(rid).value=v;document.getElementById(vid).textContent=v.toFixed(2)+'×';if(rid==='dk-m')updDK();else if(rid==='ps-m')updPS();}
+
+// extra = ผันน้ำเพิ่ม (MCM/month); 3อ่าง = DK+KY+NPL combined
+function simDK(sc,mult,extra=0){
+  const inf=THREE_IN[sc]||THREE_IN.avg;let cur=THREE_INIT;const res=[];
+  for(let i=0;i<12;i++){
+    const isAct=(i<=5);
+    if(i===5)cur=THREE_ACT_JUN; // June actual (DK+KY+NPL combined)
+    const in_=r2(inf[i]*mult),ex=isAct?0:r2(extra),out=THREE_OUT[i];
+    const end=r2(Math.min(THREE_MAX,Math.max(0,cur+in_+ex-out)));
+    res.push({m:MO[i],begin:r2(cur),inflow:in_,extra:ex,outflow:r2(out),end,isAct});
+    cur=end;
+  }return res;
+}
+
+// ══ 1-YEAR vs 2-YEAR SIMULATION TOGGLE ══
+const _simYears={dk:1,ps:1};
+function setSimYears(tank,n){
+  _simYears[tank]=n;
+  // Extend or truncate per-scenario arrays to match nYears
+  multiSc[tank].forEach(s=>{
+    if(n===2){
+      if(s.srcs.length<24) s.srcs=[...s.srcs,...s.srcs];
+      if(s.outflow&&s.outflow.length<24) s.outflow=[...s.outflow,...s.outflow];
+      if(!Array.isArray(s.extra)) s.extra=Array(12).fill(s.extra||0);
+      if(s.extra.length<24) s.extra=[...s.extra,...s.extra];
+    } else {
+      s.srcs=s.srcs.slice(0,12);
+      if(s.outflow) s.outflow=s.outflow.slice(0,12);
+      if(Array.isArray(s.extra)) s.extra=s.extra.slice(0,12);
+    }
+  });
+  document.getElementById(`${tank}-yr1-btn`)?.classList.toggle('active',n===1);
+  document.getElementById(`${tank}-yr2-btn`)?.classList.toggle('active',n===2);
+  renderScList(tank);
+  if(tank==='dk')updDK();else updPS();
+}
+// Chart labels for 24-month view (e.g. "ม.ค.'69")
+function _simLabels(nYears){
+  if(nYears===1)return MO;
+  const thY=new Date().getFullYear()+543;
+  const y1=String(thY).slice(-2),y2=String(thY+1).slice(-2);
+  return[...MO.map(m=>m+"'"+y1),...MO.map(m=>m+"'"+y2)];
+}
+// Year-divider vertical line between Dec Y1 and Jan Y2
+Chart.register({id:'yearDivPlugin',afterDraw(chart){
+  const opt=chart.options.plugins?.yearDivPlugin;
+  if(!opt)return;
+  const{ctx,scales,chartArea}=chart;
+  if(!chartArea||!scales.x)return;
+  const x11=scales.x.getPixelForValue(11),x12=scales.x.getPixelForValue(12);
+  const xPx=(x11+x12)/2;
+  const dk=document.body.classList.contains('dark');
+  ctx.save();
+  ctx.strokeStyle=dk?'rgba(100,200,220,.75)':'rgba(80,80,140,.5)';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(xPx,chartArea.top);ctx.lineTo(xPx,chartArea.bottom);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=dk?'rgba(160,230,240,.9)':'rgba(80,80,140,.55)';
+  ctx.font='bold 9px sans-serif';
+  ctx.textAlign='right';ctx.fillText('ปีที่ 1',xPx-4,chartArea.top+11);
+  ctx.textAlign='left';ctx.fillText('ปีที่ 2',xPx+4,chartArea.top+11);
+  ctx.restore();
+}});
+
+// ══ SMOOTH BAND DATASETS (replaces rectangle plugin) ══
+function mkBands(crit,t=0.35,nYears=1){
+  const c=nYears===2?[...crit,...crit]:crit;
+  const n=12*nYears;
+  return[
+    {label:'_z',data:Array(n).fill(0),borderWidth:0,pointRadius:0,fill:false,tension:t},
+    {label:'_hr',data:c.map(x=>x.hr),borderWidth:0,pointRadius:0,fill:'-1',backgroundColor:'rgba(160,0,0,.22)',tension:t},
+    {label:'_r', data:c.map(x=>x.r), borderWidth:0,pointRadius:0,fill:'-1',backgroundColor:'rgba(245,80,80,.16)',tension:t},
+    {label:'_y', data:c.map(x=>x.y), borderWidth:0,pointRadius:0,fill:'-1',backgroundColor:'rgba(255,200,0,.18)',tension:t},
+  ];
+}
+function simPS(sc,mult,extra=0){
+  const inf=PS_IN[sc]||PS_IN.avg;let cur=PS_INIT;const res=[];
+  for(let i=0;i<12;i++){
+    const isAct=(i<=5);
+    if(i===5)cur=156.08; // June actual override
+    const in_=r2(inf[i]*mult),ex=isAct?0:r2(extra),out=PS_OUT[i];
+    const end=r2(Math.min(PS_MAX,Math.max(0,cur+in_+ex-out)));
+    res.push({m:MO[i],begin:r2(cur),inflow:in_,extra:ex,outflow:r2(out),end,isAct});
+    cur=end;
+  }return res;
+}
+
+// ══ MULTI-SCENARIO STATE ══
+const SC_PAL=['#3b5bdb','#2f9e44','#e03131','#7048e8'];
+let DK_SRCS=[{v:'avg',l:'เฉลี่ย'},{v:'y55',l:'ปี 2555'},{v:'y62',l:'ปี 2562'}];
+let PS_SRCS=[{v:'ssp3_2030',l:'SSP3@2030'},{v:'ssp3_2050',l:'SSP3@2050'},{v:'ssp5_2030',l:'SSP5@2030'},{v:'ssp5_2050',l:'SSP5@2050'},{v:'y62',l:'ปี 2562'}];
+const scNext={dk:1,ps:1};
+let multiSc={
+  dk:[{id:0,label:'Scenario 1',color:'#3b5bdb',mult:1.0,mult2:1.0,srcs:Array(12).fill('avg'),outflow:THREE_OUT.map((v,i)=>+(v/DAYS[i]).toFixed(3)),extra:Array(12).fill(0)}],
+  ps:[{id:0,label:'Scenario 1',color:'#0c8599',mult:1.0,mult2:1.0,srcs:Array(12).fill('ssp3_2030'),outflow:PS_OUT.map((v,i)=>+(v/DAYS[i]).toFixed(3)),extra:Array(12).fill(0)}]
+};
+
+function addSc(tank){
+  if(multiSc[tank].length>=4) return;
+  const idx=multiSc[tank].length,id=scNext[tank]++;
+  const src=multiSc[tank][multiSc[tank].length-1]; // copy from last scenario
+  multiSc[tank].push({
+    id,
+    label:'Scenario '+(idx+1),
+    color:SC_PAL[idx%SC_PAL.length],
+    mult:src.mult,mult2:src.mult2??1.0,
+    srcs:[...src.srcs],
+    outflow:[...src.outflow],
+    extra:Array.isArray(src.extra)?[...src.extra]:Array(12).fill(src.extra||0)
+  });
+  renderScList(tank);
+  if(tank==='dk')updDK();else updPS();
+}
+function rmSc(tank,id){
+  if(multiSc[tank].length<=1) return;
+  multiSc[tank]=multiSc[tank].filter(s=>s.id!==id);
+  multiSc[tank].forEach((s,i)=>s.label='Scenario '+(i+1));
+  renderScList(tank);
+  if(tank==='dk')updDK();else updPS();
+}
+function renderScList(tank){
+  const SRCS=tank==='dk'?DK_SRCS:PS_SRCS;
+  const addBtn=document.getElementById(tank+'-add-sc');
+  if(addBtn) addBtn.style.display=multiSc[tank].length>=4?'none':'inline-flex';
+  document.getElementById(tank+'-sc-list').innerHTML=multiSc[tank].map(s=>`
+    <div class="sc-row">
+      <div class="sc-row-head">
+        <div class="sc-dot2" style="background:${s.color}"></div>
+        <span class="sc-lbl2" style="color:${s.color}">${s.label}</span>
+        <span class="sc-mtplbl">${_simYears[tank]===2?'ตัวคูณ ปี 1:':'ตัวคูณ Inflow:'}</span>
+        <input type="range" class="sc-mtp-range" min="0.5" max="2.0" step="0.05" value="${s.mult}"
+          oninput="multiSc['${tank}'].find(x=>x.id===${s.id}).mult=parseFloat(this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'×';if('${tank}'==='dk')updDK();else updPS()">
+        <span class="sc-rv2" style="color:${s.color}">${s.mult.toFixed(2)}×</span>
+        ${_simYears[tank]===2?`
+        <span class="sc-mtplbl" style="margin-left:10px">ปี 2:</span>
+        <input type="range" class="sc-mtp-range" min="0.5" max="2.0" step="0.05" value="${(s.mult2??1.0).toFixed(2)}"
+          oninput="multiSc['${tank}'].find(x=>x.id===${s.id}).mult2=parseFloat(this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'×';if('${tank}'==='dk')updDK();else updPS()">
+        <span class="sc-rv2" style="color:${s.color}">${(s.mult2??1.0).toFixed(2)}×</span>`:''}
+        ${multiSc[tank].length>1?`<button class="sc-rm" onclick="rmSc('${tank}',${s.id})">✕</button>`:''}
+      </div>
+      <div class="sc-months">
+        ${MO.map((m,i)=>i<5?
+          `<div class="sc-mo actual"><span class="sc-mo-lbl">${m}</span><span class="mo-act-tag">Actual</span></div>`:
+          `<div class="sc-mo"><span class="sc-mo-lbl">${m}</span>
+           <select onchange="(function(v){const sc=multiSc['${tank}'].find(x=>x.id===${s.id});for(let j=${i};j<12;j++)sc.srcs[j]=v;renderScList('${tank}');if('${tank}'==='dk')updDK();else updPS();})(this.value)">
+             ${SRCS.map(o=>`<option value="${o.v}"${s.srcs[i]===o.v?' selected':''}>${o.l}</option>`).join('')}
+           </select></div>`
+        ).join('')}
+      </div>
+      ${_simYears[tank]===2?`
+      <div class="sc-yr2-div"><span>── ปีที่ 2 ──</span></div>
+      <div class="sc-months">
+        ${MO.map((m,i)=>{const idx=12+i;return`<div class="sc-mo"><span class="sc-mo-lbl">${m}</span>
+          <select onchange="(function(v){const sc=multiSc['${tank}'].find(x=>x.id===${s.id});for(let j=${idx};j<24;j++)sc.srcs[j]=v;renderScList('${tank}');if('${tank}'==='dk')updDK();else updPS();})(this.value)">
+            ${SRCS.map(o=>`<option value="${o.v}"${s.srcs[idx]===o.v?' selected':''}>${o.l}</option>`).join('')}
+          </select></div>`;}).join('')}
+      </div>`:''}
+
+      <div class="sc-out-row">
+        <i class="ti ti-droplet-off sc-out-icon" aria-hidden="true"></i>
+        <span class="sc-out-lbl">Outflow ไหลออก</span>
+        <div class="sc-out-inp-wrap">
+          <input type="number" class="sc-out-inp" id="sod_${tank}_${s.id}"
+            value="${(s.outflow?s.outflow[5]:1.2).toFixed(1)}"
+            min="0" step="0.1"
+            oninput="setScOutflow('${tank}',${s.id},parseFloat(this.value)||0)"
+            placeholder="MCM/วัน">
+          <span class="sc-out-unit">MCM/วัน</span>
+        </div>
+        <span class="sc-out-hint">(มิ.ย.→ ธ.ค.)</span>
+        <button class="sc-out-btn" onclick="openOutflowPopup('${tank}',${s.id})">
+          <i class="ti ti-table-options" aria-hidden="true"></i> ปรับรายเดือน
+        </button>
+        <div class="sc-out-sep"></div>
+        <i class="ti ti-arrows-transfer-up sc-out-icon" style="color:var(--purple)" aria-hidden="true"></i>
+        <span class="sc-out-lbl">ผันน้ำเติม</span>
+        <div class="sc-out-inp-wrap">
+          <input type="number" class="sc-out-inp" id="sex_${tank}_${s.id}"
+            value="${(Array.isArray(s.extra)?s.extra[5]:s.extra||0).toFixed(1)}"
+            min="0" step="0.1"
+            oninput="setScExtra('${tank}',${s.id},parseFloat(this.value)||0)"
+            placeholder="MCM/วัน">
+          <span class="sc-out-unit">MCM/วัน</span>
+        </div>
+        <span class="sc-out-hint">(มิ.ย.→ ธ.ค.)</span>
+        <button class="sc-out-btn" style="border-color:var(--purple);color:var(--purple)" onclick="openExtraPopup('${tank}',${s.id})">
+          <i class="ti ti-table-options" aria-hidden="true"></i> ปรับรายเดือน
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+// Run a named scenario object, returns per-month result array
+// June Y1 (i=5) is ALWAYS fixed at ACT_JUN. nYears=1 or 2 (24 months).
+function runSc(tank,s,nYears=1){
+  const INF=tank==='dk'?THREE_IN:PS_IN;
+  const OUT_BASE=tank==='dk'?THREE_OUT:PS_OUT;
+  const rawOut=s.outflow||null;
+  const extraArr=Array.isArray(s.extra)?s.extra:Array(12).fill(s.extra||0);
+  const MAX=tank==='dk'?THREE_MAX:PS_MAX;
+  const INIT=tank==='dk'?THREE_INIT:PS_INIT;
+  const ACT_JUN=tank==='dk'?THREE_ACT_JUN:PS_ACT_JUN;
+  const n=12*nYears;
+  // Helper: get outflow MCM for absolute month index i (uses DAYS[mi] for conversion)
+  function getOut(i){const mi=i%12;return rawOut?r2(rawOut[Math.min(i,rawOut.length-1)]*DAYS[mi]):OUT_BASE[mi];}
+  function getSrc(i){return s.srcs[Math.min(i,s.srcs.length-1)];}
+  function getEx(i){const mi=i%12;return r2(extraArr[Math.min(i,extraArr.length-1)]*DAYS[mi]);}
+  let cur=INIT;const res=[];
+  for(let i=0;i<n;i++){
+    const mi=i%12;
+    const isAct=i<5;
+    if(i===5){ // Jun Y1 actual anchor
+      const rem=1-STAR_PROGRESS;
+      const srcInf=INF[getSrc(5)]||INF[Object.keys(INF)[0]];
+      const in_=r2(srcInf[5]*s.mult*rem);
+      const ex=r2(getEx(5)*rem);
+      const out5=getOut(5);
+      const end=r2(Math.min(MAX,Math.max(0,ACT_JUN+in_+ex-out5*rem)));
+      res.push({m:MO[5],begin:ACT_JUN,inflow:in_,extra:ex,outflow:r2(out5*rem),end,isAct:false,yr:0});
+      cur=end;continue;
+    }
+    const srcInf=INF[getSrc(i)]||INF[Object.keys(INF)[0]];
+    const _mult=i<12?s.mult:(s.mult2??s.mult);
+    const in_=r2(srcInf[mi]*_mult);
+    const ex=isAct?0:getEx(i);
+    const out_=getOut(i);
+    const end=r2(Math.min(MAX,Math.max(0,cur+in_+ex-out_)));
+    res.push({m:MO[mi],begin:r2(cur),inflow:in_,extra:ex,outflow:out_,end,isAct,yr:Math.floor(i/12)});
+    cur=end;
+  }return res;
+}
+
+// ══ STATUS COLOR (criteria-based) ══
+function sc(p){return p>=70?'#2f9e44':p>=40?'#e67700':'#c92a2a';}
+function scC(v,c){if(v<=c.hr)return'#b91c1c';if(v<=c.r)return'#e03131';if(v<=c.y)return'#e67700';return'#2f9e44';}
+function bdgC(v,c){
+  if(v<=c.hr)return'<span class="badge b-crit" style="background:#ffe4e4;color:#b91c1c;border:1px solid #fca5a5">Hard Red</span>';
+  if(v<=c.r)return'<span class="badge b-crit">Red</span>';
+  if(v<=c.y)return'<span class="badge b-warn">Yellow</span>';
+  return'<span class="badge b-ok">ปกติ</span>';
+}
+
+// ══ GAUGE ══
+function gauge(m,val,max,tag){
+  const p=pct(val,max),r=34,c2=2*Math.PI*r,d=c2*(p/100),g=c2-d,col=sc(p);
+  const tagHtml=tag?`<div class="gtag ${tag==='Actual'?'gtag-act':'gtag-fct'}">${tag}</div>`:'';
+  return`<div class="gauge-card">${tagHtml}
+    <div class="gl">${m}</div>
+    <div class="gauge-ring">
+      <svg viewBox="0 0 88 88" aria-hidden="true"><circle class="g-bg" cx="44" cy="44" r="${r}"/>
+      <circle class="g-fill" cx="44" cy="44" r="${r}" stroke="${col}" stroke-dasharray="${d.toFixed(1)} ${g.toFixed(1)}"/></svg>
+      <div class="gi"><div class="gp" style="color:${col}">${p}%</div><div class="gm">${f(val)}</div></div>
+    </div>
+    <div class="gc">of ${max} MCM</div>
+  </div>`;
+}
+
+// ══ BANNER ══
+function bi(icon,cls,val,lbl){return`<div class="banner-item"><div class="bi ${cls}"><i class="ti ${icon}" aria-hidden="true"></i></div><div><div class="bv">${val}</div><div class="bl">${lbl}</div></div></div>`;}
+
+// ══ TABLE ══
+function mkTbl(data,max,crit){
+  const hasCrit=crit&&crit.length>=12;
+  let h=`<thead><tr><th>เดือน</th><th>ต้นเดือน</th><th>Inflow</th><th>ผันเพิ่ม</th><th>Outflow</th><th>สิ้นเดือน</th><th>%</th><th>สถานะ</th></tr></thead><tbody>`;
+  data.forEach((d,i)=>{
+    const ci=i%12; // cyclic criteria index
+    const p=pct(d.end,max);
+    const col=hasCrit?scC(d.end,crit[ci]):sc(p);
+    const badge=hasCrit?bdgC(d.end,crit[ci]):(p>=70?'<span class="badge b-ok">ปกติ</span>':p>=40?'<span class="badge b-warn">เฝ้าระวัง</span>':'<span class="badge b-crit">วิกฤต</span>');
+    if(i===12) h+=`<tr><td colspan="8" style="text-align:center;font-size:10px;font-weight:700;color:#6b7a9e;padding:4px 8px;background:var(--surface2);border-top:2px dashed rgba(80,80,140,.35)">── ปีที่ 2 ──</td></tr>`;
+    const rowStyle=d.isAct?' class="tr-actual"':'';
+    h+=`<tr${rowStyle}><td class="tdm">${d.m}${d.isAct?'<span style="font-size:9px;color:#888;margin-left:4px">●</span>':''}</td>
+    <td>${f(d.begin)}</td><td class="tdh">${f(d.inflow)}</td>
+    <td style="color:${d.extra>0?'#7048e8':'var(--text3)'}">${d.extra>0?'+'+f(d.extra):'—'}</td>
+    <td class="tdl">${f(d.outflow)}</td>
+    <td><b style="color:${col}">${f(d.end)}</b><div class="mbar"><div class="mbar-f" style="width:${p}%;background:${col}"></div></div></td>
+    <td style="color:${col};font-weight:700">${p}%</td><td>${badge}</td></tr>`;
+  });
+  function _totRow(slice,label){
+    const ti=r2(slice.reduce((s,d)=>s+d.inflow,0));
+    const te=r2(slice.reduce((s,d)=>s+d.extra,0));
+    const to=r2(slice.reduce((s,d)=>s+d.outflow,0));
+    const net=r2(ti+te-to);
+    const nc=net>=0?'var(--green)':'var(--red)';
+    return`<tr class="tbl-total">
+      <td><b>${label}</b></td><td>—</td>
+      <td class="tdh"><b>${f(ti)}</b></td>
+      <td style="color:${te>0?'#7048e8':'var(--text3)'}">${te>0?'+'+f(te):'—'}</td>
+      <td class="tdl"><b>${f(to)}</b></td>
+      <td colspan="3">—</td>
+    </tr>`;
+  }
+  h+=`</tbody><tfoot>`;
+  if(data.length<=12){
+    h+=_totRow(data,'รวม');
+  } else {
+    h+=_totRow(data.slice(0,12),'รวม ปีที่ 1');
+    h+=_totRow(data.slice(12),'รวม ปีที่ 2');
+  }
+  h+=`</tfoot>`;
+  return h;
+}
+
+// ══ CHART DEFAULTS ══
+function _gr(){return document.body.classList.contains('dark')?'rgba(45,212,191,.09)':'rgba(13,80,90,.07)';}
+function _tc(){return document.body.classList.contains('dark')?'#6b9098':'#6d8893';}
+function _tk(){return {font:{size:10},color:_tc()};}
+function _al(){return document.body.classList.contains('dark')?'#f0f0f0':'#111';} // actual line color
+// Canvas background plugin — fills chart area near-black in dark mode
+const canvasBgPlugin={id:'canvasBg',beforeDraw(chart){
+  if(!document.body.classList.contains('dark'))return;
+  const ctx=chart.ctx;ctx.save();ctx.globalCompositeOperation='destination-over';
+  ctx.fillStyle='#080d14';ctx.roundRect(0,0,chart.width,chart.height,6);ctx.fill();ctx.restore();
+}};
+Chart.register(canvasBgPlugin);
+function lOpts(yMax,yMin=0){const gr=_gr(),tk=_tk();return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:yMin,max:yMax,grid:{color:gr},ticks:tk},x:{grid:{color:gr},ticks:tk}}};}
+function bOpts(){const gr=_gr(),tk=_tk(),tc=_tc();return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:tc}}},scales:{y:{grid:{color:gr},ticks:tk},x:{grid:{display:false},ticks:tk}}};}
+
+// ══ DK (3อ่าง = DK+KY+NPL combined) ══
+function updDK(){
+  const nYears=_simYears.dk;
+  const sc0=multiSc.dk[0];
+  const data=runSc('dk',sc0,nYears);
+  const p0=pct(THREE_INIT,THREE_MAX);
+
+  const _n=new Date(),_thY=_n.getFullYear()+543,_dl=_n.getDate()+' '+MO[_n.getMonth()]+' '+_thY;
+  const ytdInDK=r2(data.slice(0,6).reduce((s,d)=>s+d.inflow,0));
+  const ytdOutDK=r2(data.slice(0,6).reduce((s,d)=>s+d.outflow,0));
+  document.getElementById('banner-dk').innerHTML=
+    bi('ti-database','bi-b',f(THREE_INIT),'ต้นปี 3อ่าง (MCM)')+
+    bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
+    bi('ti-droplet','bi-t',f(THREE_ACT_JUN)+' ('+pct(THREE_ACT_JUN,THREE_MAX)+'%)','น้ำในอ่าง ณ '+_dl+' (MCM)')+
+    bi('ti-arrow-down','bi-g',f(ytdInDK),'น้ำไหลลงอ่างสะสม ม.ค.–'+MO[_n.getMonth()]+' '+_thY+' (MCM)')+
+    bi('ti-arrow-up','bi-r',f(ytdOutDK),'น้ำไหลออกอ่างสะสม ม.ค.–'+MO[_n.getMonth()]+' '+_thY+' (MCM)')+
+    bi('ti-layers','bi-p',multiSc.dk.length+' scenario'+(multiSc.dk.length>1?'s':''),'Active scenarios');
+
+  const allDK=multiSc.dk.map(s=>runSc('dk',s,nYears));
+  // Gauge: 1yr=[Jan,Jun,Sep,Dec] 2yr=[Jan,DecY1,JunY2,DecY2]
+  const gaugeIdx=nYears===1?[0,5,8,11]:[0,11,17,23];
+  document.getElementById('gauges-dk').innerHTML=gaugeIdx.map(i=>{
+    const d=data[i]; if(!d) return '';
+    const isAct=d.isAct;
+    const val=isAct?d.end:Math.min(...allDK.map(sd=>sd[i]?.end??0));
+    const lbl=d.m+(d.yr>0?' ปี 2':'');
+    return gauge(lbl,val,THREE_MAX,isAct?'Actual':'Forecast');
+  }).join('');
+
+  const n=12*nYears;
+  const actualLine=data.map(d=>d.isAct?d.end:null);
+  const bands=mkBands(DK_CRIT,.35,nYears);
+  const labels=_simLabels(nYears);
+
+  const scDatasets=multiSc.dk.map((s,si)=>{
+    const sData=si===0?data:runSc('dk',s,nYears);
+    const fcastLine=sData.map((d,i)=>i<5?null:d.end);
+    return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.35,borderWidth:2.5,
+      pointRadius:fcastLine.map((v,i)=>v!=null&&i>5?4:i===5?5:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
+  });
+
+  kc('dklv');
+  CH['dklv']=new Chart(document.getElementById('c-dk-lv'),{
+    type:'line',
+    data:{labels,datasets:[
+      ...bands,
+      ...scDatasets,
+      {label:'★ Actual',data:actualLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:.35,borderWidth:2.5,pointRadius:actualLine.map(v=>v!=null?4:0),pointBackgroundColor:_al(),pointBorderColor:'#fff',pointBorderWidth:2,order:0,_actJun:THREE_ACT_JUN},
+      {label:'Max cap.',data:Array(n).fill(THREE_MAX),borderColor:'rgba(201,42,42,.4)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,order:99}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
+      scales:{y:{min:0,max:THREE_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}
+    }
+  });
+
+  initResMap('dk');
+
+  kc('dkcmp');
+  CH['dkcmp']=new Chart(document.getElementById('c-dk-cmp'),{type:'bar',data:{labels,datasets:allDK.map((sData,si)=>{
+    const s=multiSc.dk[si];
+    return{label:s.label,data:sData.map(d=>d.inflow),backgroundColor:s.color+'99',borderRadius:4};
+  })},options:bOpts()});
+
+  // Inflow summary
+  const dkSummEl=document.getElementById('dk-inf-summ');
+  if(dkSummEl){
+    const base=r2(allDK[0].slice(0,12).reduce((s,d)=>s+d.inflow,0));
+    dkSummEl.innerHTML=allDK.map((sData,si)=>{
+      const s=multiSc.dk[si];
+      const srcKey=s.srcs[5]||'avg';
+      const srcLbl=srcKey==='avg'?'เฉลี่ย 10 ปี':srcKey==='avg5'?'เฉลี่ย 5 ปี':('ปี '+(INF_YR_THAI[srcKey]||srcKey));
+      const tot=r2(sData.slice(0,12).reduce((a,d)=>a+d.inflow,0));
+      const diff=si===0?'':`<span class="iss-diff ${tot>=base?'pos':'neg'}">${tot>=base?'+':''}${f(tot-base)} MCM</span>`;
+      return`<div class="iss-row"><span class="iss-dot" style="background:${s.color}"></span><span class="iss-lbl">${s.label}</span><span class="iss-src">(${srcLbl})</span><span class="iss-tot">${f(tot)} MCM/ปี 1</span>${diff}</div>`;
+    }).join('');
+  }
+
+  // Dynamic legend
+  const lvLeg=document.getElementById('dk-lvleg');
+  if(lvLeg) lvLeg.innerHTML=
+    multiSc.dk.map(s=>`<div class="yl"><div class="yl-line" style="background:${s.color}"></div>${s.label}</div>`).join('')+
+    `<div class="yl"><div class="yl-line yl-actual"></div>★ Actual</div>`;
+
+  _dkAllData=allDK;
+  if(_dkTblSc>=allDK.length) _dkTblSc=0;
+  const dkSelEl=document.getElementById('dk-tbl-sc-sel');
+  if(dkSelEl) dkSelEl.innerHTML=multiSc.dk.map((s,i)=>`<button class="tsc-pill${i===_dkTblSc?' active':''}" style="--sc-col:${s.color}" onclick="showDKTbl(${i})">${s.label}</button>`).join('');
+  document.getElementById('tbl-dk').innerHTML=mkTbl(_dkAllData[_dkTblSc],THREE_MAX,DK_CRIT);
+}
+
+// ── TODAY DIVIDER LINE (drawn at STAR_PROGRESS between STAR_MONTH_IDX-1 and STAR_MONTH_IDX) ──
+Chart.register({id:'todayLine',afterDatasetsDraw(chart){
+  if(!chart.options.plugins||chart.options.plugins.todayLine!==true) return;
+  const{ctx,scales,chartArea}=chart;
+  if(!chartArea||!scales.x) return;
+  const x4=scales.x.getPixelForValue(STAR_MONTH_IDX-1),x5=scales.x.getPixelForValue(STAR_MONTH_IDX);
+  const xPx=x4+(x5-x4)*STAR_PROGRESS;
+  const dk=document.body.classList.contains('dark');
+  ctx.save();
+  ctx.beginPath();ctx.setLineDash([5,4]);
+  ctx.strokeStyle=dk?'rgba(100,200,220,.65)':'rgba(80,80,120,0.35)';ctx.lineWidth=1.5;
+  ctx.moveTo(xPx,chartArea.top);ctx.lineTo(xPx,chartArea.bottom);ctx.stroke();
+  ctx.setLineDash([]);ctx.font='bold 9px var(--font,system-ui,sans-serif)';
+  ctx.fillStyle=dk?'rgba(160,230,240,.9)':'rgba(80,80,120,0.55)';
+  ctx.textAlign='right';ctx.fillText('◀ Actual',xPx-5,chartArea.top+12);
+  ctx.textAlign='left';ctx.fillText('Forecast ▶',xPx+5,chartArea.top+12);
+  ctx.restore();
+}});
+
+// Custom afterDraw: black stub (May→★), scenario stubs (★→June-dot), ★ symbol
+Chart.register({id:'starDraw',afterDraw(chart){
+  const ds=chart.data.datasets;
+  const actIdx=ds.findIndex(d=>d.label==='★ Actual'&&d._actJun!==undefined);
+  if(actIdx<0) return;
+  const d=ds[actIdx];
+  const{ctx,scales,chartArea}=chart;
+  if(!scales||!scales.x||!scales.y||!chartArea) return;
+
+  const x4=scales.x.getPixelForValue(STAR_MONTH_IDX-1);
+  const x5=scales.x.getPixelForValue(STAR_MONTH_IDX);
+  const starX=x4+(x5-x4)*STAR_PROGRESS;
+  const starY=scales.y.getPixelForValue(d._actJun);
+  const mayVal=d.data[STAR_MONTH_IDX-1];
+  const mayY=mayVal!=null?scales.y.getPixelForValue(mayVal):null;
+
+  // 1) Actual stub: end-of-May → ★
+  if(mayY!==null){
+    ctx.save();
+    ctx.strokeStyle=_al();ctx.lineWidth=2.5;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(x4,mayY);ctx.lineTo(starX,starY);ctx.stroke();
+    ctx.restore();
+  }
+
+  // 2) Scenario stubs: ★ → each scenario's June-end dot
+  ds.forEach(sd=>{
+    if(sd.label==='★ Actual'||sd.label==='Max cap.'||sd.label.startsWith('_')) return;
+    const junVal=sd.data[STAR_MONTH_IDX];
+    if(junVal==null||!sd.borderColor) return;
+    const junY=scales.y.getPixelForValue(junVal);
+    ctx.save();
+    ctx.strokeStyle=sd.borderColor;ctx.lineWidth=sd.borderWidth||2.5;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(starX,starY);ctx.lineTo(x5,junY);ctx.stroke();
+    ctx.restore();
+  });
+
+  // 3) ★ symbol centered on the actual data point
+  ctx.save();ctx.font='bold 15px serif';ctx.fillStyle=_al();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('★',starX,starY);ctx.restore();
+}});
+
+// ══ PS ══
+function updPS(){
+  const nYears=_simYears.ps;
+  const sc0=multiSc.ps[0];
+  const data=runSc('ps',sc0,nYears);
+  const p0=pct(PS_INIT,PS_MAX);
+
+  const _nP=new Date(),_thYP=_nP.getFullYear()+543,_dlP=_nP.getDate()+' '+MO[_nP.getMonth()]+' '+_thYP;
+  const ytdInPS=r2(data.slice(0,6).reduce((s,d)=>s+d.inflow,0));
+  const ytdOutPS=r2(data.slice(0,6).reduce((s,d)=>s+d.outflow,0));
+  document.getElementById('banner-ps').innerHTML=
+    bi('ti-database','bi-b',f(PS_INIT),'ต้นปี ประแสร์ (MCM)')+
+    bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
+    bi('ti-droplet','bi-t',f(PS_ACT_JUN)+' ('+pct(PS_ACT_JUN,PS_MAX)+'%)','น้ำในอ่าง ณ '+_dlP+' (MCM)')+
+    bi('ti-arrow-down','bi-g',f(ytdInPS),'น้ำไหลลงอ่างสะสม ม.ค.–'+MO[_nP.getMonth()]+' '+_thYP+' (MCM)')+
+    bi('ti-arrow-up','bi-r',f(ytdOutPS),'น้ำไหลออกอ่างสะสม ม.ค.–'+MO[_nP.getMonth()]+' '+_thYP+' (MCM)')+
+    bi('ti-layers','bi-p',multiSc.ps.length+' scenario'+(multiSc.ps.length>1?'s':''),'Active scenarios');
+
+  const allPS=multiSc.ps.map(s=>runSc('ps',s,nYears));
+  const gaugeIdx=nYears===1?[0,5,8,11]:[0,11,17,23];
+  document.getElementById('gauges-ps').innerHTML=gaugeIdx.map(i=>{
+    const d=data[i]; if(!d) return '';
+    const isAct=d.isAct;
+    const val=isAct?d.end:Math.min(...allPS.map(sd=>sd[i]?.end??0));
+    const lbl=d.m+(d.yr>0?' ปี 2':'');
+    return gauge(lbl,val,PS_MAX,isAct?'Actual':'Forecast');
+  }).join('');
+
+  const n=12*nYears;
+  const actualLine=data.map(d=>d.isAct?d.end:null);
+  const psBands=mkBands(PS_CRIT,.35,nYears);
+  const labels=_simLabels(nYears);
+
+  const scDatasets=multiSc.ps.map((s,si)=>{
+    const sData=si===0?data:runSc('ps',s,nYears);
+    const fcastLine=sData.map((d,i)=>i<5?null:d.end);
+    return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.3,borderWidth:2.5,
+      pointRadius:fcastLine.map((v,i)=>v!=null&&i>5?3:i===5?5:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
+  });
+
+  kc('pslv');
+  CH['pslv']=new Chart(document.getElementById('c-ps-lv'),{type:'line',data:{labels,datasets:[
+    ...psBands,
+    ...scDatasets,
+    {label:'★ Actual',data:actualLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:.35,borderWidth:2.5,pointRadius:actualLine.map(v=>v!=null?4:0),pointBackgroundColor:_al(),pointBorderColor:'#fff',pointBorderWidth:2,order:0,_actJun:PS_ACT_JUN},
+    {label:'Max cap.',data:Array(n).fill(295),borderColor:'rgba(201,42,42,.4)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,order:99}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
+    scales:{y:{min:0,max:PS_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}}});
+
+  // map-ps initialized lazily on first tab switch (container hidden at this point)
+
+  kc('pscmp');
+  CH['pscmp']=new Chart(document.getElementById('c-ps-cmp'),{type:'bar',data:{labels,datasets:allPS.map((sData,si)=>{
+    const s=multiSc.ps[si];
+    return{label:s.label,data:sData.map(d=>d.inflow),backgroundColor:s.color+'99',borderRadius:4};
+  })},options:bOpts()});
+
+  // Inflow summary
+  const psSummEl=document.getElementById('ps-inf-summ');
+  if(psSummEl){
+    const basePs=r2(allPS[0].slice(0,12).reduce((s,d)=>s+d.inflow,0));
+    psSummEl.innerHTML=allPS.map((sData,si)=>{
+      const s=multiSc.ps[si];
+      const srcKey=s.srcs[5]||'avg';
+      const srcLbl=srcKey==='avg'?'เฉลี่ย 10 ปี':srcKey==='avg5'?'เฉลี่ย 5 ปี':('ปี '+(INF_YR_THAI[srcKey]||srcKey));
+      const tot=r2(sData.slice(0,12).reduce((a,d)=>a+d.inflow,0));
+      const diff=si===0?'':`<span class="iss-diff ${tot>=basePs?'pos':'neg'}">${tot>=basePs?'+':''}${f(tot-basePs)} MCM</span>`;
+      return`<div class="iss-row"><span class="iss-dot" style="background:${s.color}"></span><span class="iss-lbl">${s.label}</span><span class="iss-src">(${srcLbl})</span><span class="iss-tot">${f(tot)} MCM/ปี 1</span>${diff}</div>`;
+    }).join('');
+  }
+
+  // Dynamic legend
+  const lvLegPs=document.getElementById('ps-lvleg');
+  if(lvLegPs) lvLegPs.innerHTML=
+    multiSc.ps.map(s=>`<div class="yl"><div class="yl-line" style="background:${s.color}"></div>${s.label}</div>`).join('')+
+    `<div class="yl"><div class="yl-line yl-actual"></div>★ Actual</div>`;
+
+  _psAllData=allPS;
+  if(_psTblSc>=allPS.length) _psTblSc=0;
+  const psSelEl=document.getElementById('ps-tbl-sc-sel');
+  if(psSelEl) psSelEl.innerHTML=multiSc.ps.map((s,i)=>`<button class="tsc-pill${i===_psTblSc?' active':''}" style="--sc-col:${s.color}" onclick="showPSTbl(${i})">${s.label}</button>`).join('');
+  document.getElementById('tbl-ps').innerHTML=mkTbl(_psAllData[_psTblSc],PS_MAX,PS_CRIT);
+}
+
+// ══ INFLOW/OUTFLOW SCENARIO STATE ══
+const _SC_PAL2=['#3b5bdb','#2f9e44','#e03131','#7048e8'];
+let _infMode={dk:'all',ps:'all'};
+let _outMode={dk:'all',ps:'all'};
+let _infSc={dk:[{id:0,color:'#3b5bdb',key:'avg'}],ps:[{id:0,color:'#0c8599',key:'avg'}]};
+let _outSc={dk:[{id:0,color:'#3b5bdb',key:'avg'}],ps:[{id:0,color:'#0c8599',key:'avg'}]};
+const _infScN={dk:1,ps:1},_outScN={dk:1,ps:1};
+
+function setInfMode(tank,mode){
+  _infMode[tank]=mode;
+  document.querySelectorAll('#inf-mode-'+tank+'-btns .yr-btn').forEach((b,i)=>b.classList.toggle('active',mode==='all'?i===0:i===1));
+  const m=document.getElementById('inf-sc-mgr-'+tank);
+  if(m)m.style.display=mode==='sc'?'':'none';
+  _renderInfScMgr(tank);
+  tank==='dk'?renderInflowDK():renderInflowPS();
+}
+function setOutMode(tank,mode){
+  _outMode[tank]=mode;
+  document.querySelectorAll('#out-mode-'+tank+'-btns .yr-btn').forEach((b,i)=>b.classList.toggle('active',mode==='all'?i===0:i===1));
+  const m=document.getElementById('out-sc-mgr-'+tank);
+  if(m)m.style.display=mode==='sc'?'':'none';
+  _renderOutScMgr(tank);
+  tank==='dk'?renderOutflowDK():renderOutflowPS();
+}
+function _mkYrOptsHtml(){
+  return'<option value="avg">เฉลี่ย 10 ปี</option><option value="avg5">เฉลี่ย 5 ปี</option>'+
+    INF_YR_KEYS.map(k=>`<option value="${k}">ปี ${INF_YR_THAI[k]||k}</option>`).join('');
+}
+function _renderScMgrGeneric(scArr,tank,type){
+  const listEl=document.getElementById(type+'-sc-list-'+tank);
+  if(!listEl)return;
+  const yOpts=_mkYrOptsHtml();
+  listEl.innerHTML=scArr.map((s,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 2px;flex-wrap:wrap">
+    <div style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
+    <span style="font-size:11px;font-weight:700;min-width:70px;color:${s.color}">Scenario ${i+1}</span>
+    <select id="${type}-sc-sel-${tank}-${s.id}" class="inf-sel">${yOpts}</select>
+    ${scArr.length>1?`<button class="sc-rm" onclick="_rmSc2('${type}','${tank}',${s.id})">✕</button>`:''}
+  </div>`).join('');
+  scArr.forEach(s=>{
+    const el=document.getElementById(`${type}-sc-sel-${tank}-${s.id}`);
+    if(el){
+      el.value=s.key;
+      el.onchange=function(){
+        const sc=(type==='inf'?_infSc:_outSc)[tank].find(x=>x.id===s.id);
+        if(sc)sc.key=this.value;
+        if(type==='inf')tank==='dk'?renderInflowDK():renderInflowPS();
+        else tank==='dk'?renderOutflowDK():renderOutflowPS();
+      };
+    }
+  });
+  const addBtn=document.getElementById(type+'-sc-add-'+tank);
+  if(addBtn)addBtn.style.display=scArr.length>=4?'none':'';
+}
+function _renderInfScMgr(tank){_renderScMgrGeneric(_infSc[tank],tank,'inf');}
+function _renderOutScMgr(tank){_renderScMgrGeneric(_outSc[tank],tank,'out');}
+function addInflowSc(tank){
+  if(_infSc[tank].length>=4)return;
+  const id=_infScN[tank]++;
+  _infSc[tank].push({id,color:_SC_PAL2[_infSc[tank].length%4],key:'avg'});
+  _renderInfScMgr(tank);
+  tank==='dk'?renderInflowDK():renderInflowPS();
+}
+function addOutflowSc(tank){
+  if(_outSc[tank].length>=4)return;
+  const id=_outScN[tank]++;
+  _outSc[tank].push({id,color:_SC_PAL2[_outSc[tank].length%4],key:'avg'});
+  _renderOutScMgr(tank);
+  tank==='dk'?renderOutflowDK():renderOutflowPS();
+}
+function _rmSc2(type,tank,id){
+  if(type==='inf'){
+    if(_infSc[tank].length<=1)return;
+    _infSc[tank]=_infSc[tank].filter(s=>s.id!==id);
+    _renderInfScMgr(tank);
+    tank==='dk'?renderInflowDK():renderInflowPS();
+  } else {
+    if(_outSc[tank].length<=1)return;
+    _outSc[tank]=_outSc[tank].filter(s=>s.id!==id);
+    _renderOutScMgr(tank);
+    tank==='dk'?renderOutflowDK():renderOutflowPS();
+  }
+}
+
+// ══ INFLOW TAB ══
+// ══ INFLOW DATA ══
+const SC_COLORS=['#3b5bdb','#2f9e44','#e03131'];
+// Year-view dropdown constants
+let INF_YR_KEYS=['y68','y67','y66','y65','y64','y63','y62','y61','y60','y59','y58','y57','y56','y55'];
+let INF_YR_THAI={y68:'2568',y67:'2567',y66:'2566',y65:'2565',y64:'2564',y63:'2563',y62:'2562',y61:'2561',y60:'2560',y59:'2559',y58:'2558',y57:'2557',y56:'2556',y55:'2555'};
+const INF_YR_PAL=['#4dabf7','#63e6be','#ffa94d','#f783ac','#a9e34b','#74c0fc','#38d9a9','#fd7e14','#f06595','#74b816','#a5d8ff','#20c997','#e64980','#37b24d'];
+const _Z12=Array(12).fill(0);
+
+// Outflow year-keyed data (populated by loadDataJson)
+const KY_OUT=[13.64,12.32,13.64,13.2,13.64,13.2,13.64,13.64,13.2,13.64,13.2,13.64];
+const NPL_OUT=[22.63,20.44,22.63,21.9,22.63,21.9,22.63,22.63,21.9,22.63,21.9,22.63];
+function _mkOutYr(avg){const o={avg:[...avg],avg5:[...avg]};INF_YR_KEYS.forEach(k=>o[k]=[..._Z12]);return o;}
+let THREE_OUT_YR=_mkOutYr(THREE_OUT);
+let DK_OUT_YR=_mkOutYr(DK_OUT);
+let KY_OUT_YR=_mkOutYr(KY_OUT);
+let NPL_OUT_YR=_mkOutYr(NPL_OUT);
+let PS_OUT_YR=_mkOutYr(PS_OUT);
+
+// Build datasets from a data source object by year-dropdown value
+// bold=true → main chart line width, bold=false → sub-chart (smaller)
+function _yrDs(src,yr,bold){
+  const lnW=bold?2.5:2, prR=bold?4:3, prW=bold?1.5:1;
+  if(yr==='all'){
+    const ds=[];
+    ds.push({label:'เฉลี่ย 10 ปี',data:src.avg||_Z12,borderColor:'#3b5bdb',backgroundColor:'#3b5bdb22',fill:false,tension:.35,borderWidth:bold?3:2.5,pointRadius:prR,pointBackgroundColor:'#3b5bdb',pointBorderColor:'#fff',pointBorderWidth:prW,order:0});
+    INF_YR_KEYS.forEach((k,i)=>{
+      const c=INF_YR_PAL[i%INF_YR_PAL.length];
+      ds.push({label:'ปี '+INF_YR_THAI[k],data:src[k]||_Z12,borderColor:c,backgroundColor:c+'18',fill:false,tension:.35,borderWidth:bold?1.5:1,pointRadius:bold?2:1.5,pointBackgroundColor:c,pointBorderColor:'#fff',pointBorderWidth:1,order:i+1});
+    });
+    return ds;
+  }
+  const lbl=yr==='avg'?'เฉลี่ย 10 ปี':yr==='avg5'?'เฉลี่ย 5 ปี':('ปี '+(INF_YR_THAI[yr]||yr));
+  return [{label:lbl,data:src[yr]||_Z12,borderColor:'#3b5bdb',backgroundColor:'#3b5bdb22',fill:false,tension:.35,borderWidth:lnW,pointRadius:prR,pointBackgroundColor:'#3b5bdb',pointBorderColor:'#fff',pointBorderWidth:prW}];
+}
+
+function _mkSparkMini(canvasId,valId,data,color){
+  const el=document.getElementById(canvasId);
+  const vEl=document.getElementById(valId);
+  const d2=(data||[]).map(v=>v??0);  // null→0 for sparkline
+  if(vEl) vEl.textContent=f(sum(d2));
+  if(!el) return;
+  data=d2;
+  kc(canvasId);
+  CH[canvasId]=new Chart(el,{
+    type:'line',
+    data:{labels:MO,datasets:[{data:data||Array(12).fill(0),borderColor:color,backgroundColor:color+'28',fill:true,tension:.4,pointRadius:0,borderWidth:1.5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}
+  });
+}
+
+function _mkLineChart(canvasId,datasets){
+  kc(canvasId);
+  const el=document.getElementById(canvasId);if(!el)return;
+  CH[canvasId]=new Chart(el,{
+    type:'line',
+    data:{labels:MO,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc()}}},
+      scales:{y:{grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:_tk()}}}
+  });
+}
+
+// Build 3 scenario selectors dynamically inside a row div
+function _buildScRow(rowId,pfx,onChange,defs){
+  const wrap=document.getElementById(rowId);
+  if(!wrap||wrap.dataset.built)return;
+  wrap.dataset.built='1';
+  const yOpts='<option value="avg">เฉลี่ย 10 ปี</option><option value="avg5">เฉลี่ย 5 ปี</option>'+
+    INF_YR_KEYS.map(k=>`<option value="${k}">ปี ${INF_YR_THAI[k]}</option>`).join('')+
+    '<option value="none">— ไม่แสดง —</option>';
+  SC_COLORS.forEach((c,i)=>{
+    const item=document.createElement('div');
+    item.className='sc-sel-item';
+    item.innerHTML=`<div class="sc-dot" style="background:${c}"></div>`+
+      `<select id="${pfx}${i+1}" class="inf-sel" onchange="${onChange}()">${yOpts}</select>`;
+    wrap.appendChild(item);
+    const sel=document.getElementById(`${pfx}${i+1}`);
+    if(sel&&defs[i])sel.value=defs[i];
+  });
+}
+
+// Get keys from 3 selectors (filter 'none')
+function _sc3Keys(pfx){
+  return [1,2,3].map(n=>{const e=document.getElementById(`${pfx}${n}`);return e?e.value:'none';}).filter(k=>k!=='none');
+}
+
+// Build datasets from keys+source (for 3-selector mode)
+function _scDs(src,keys,bold){
+  const lnW=bold?2.5:2,prR=bold?4:3,prW=bold?1.5:1;
+  const lbl=k=>k==='avg'?'เฉลี่ย 10 ปี':k==='avg5'?'เฉลี่ย 5 ปี':('ปี '+(INF_YR_THAI[k]||k));
+  return keys.map((k,i)=>({label:lbl(k),data:src[k]||_Z12,borderColor:SC_COLORS[i%3],backgroundColor:SC_COLORS[i%3]+'22',fill:false,tension:.35,borderWidth:lnW,pointRadius:prR,pointBackgroundColor:SC_COLORS[i%3],pointBorderColor:'#fff',pointBorderWidth:prW}));
+}
+
+function _scDs2(src,scArr,bold){
+  return scArr.map((s,i)=>({label:'Scenario '+(i+1),data:(src[s.key]||_Z12).map(v=>v??null),borderColor:s.color,backgroundColor:s.color+'22',fill:false,tension:.35,borderWidth:bold?2.5:2,pointRadius:bold?4:3,pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:bold?1.5:1}));
+}
+function renderInflowDK(){
+  if(_infMode.dk==='all'){
+    _mkLineChart('c-3tk',_yrDs(THREE_IN,'all',true));
+    _mkLineChart('c-dki',_yrDs(DK_IN,'all',false));
+    _mkLineChart('c-kyi',_yrDs(KY_IN,'all',false));
+    _mkLineChart('c-npli',_yrDs(NPL_IN,'all',false));
+  } else {
+    _mkLineChart('c-3tk',_scDs2(THREE_IN,_infSc.dk,true));
+    _mkLineChart('c-dki',_scDs2(DK_IN,_infSc.dk,false));
+    _mkLineChart('c-kyi',_scDs2(KY_IN,_infSc.dk,false));
+    _mkLineChart('c-npli',_scDs2(NPL_IN,_infSc.dk,false));
+  }
+}
+function onYrChangeDK(){}  // kept for compat
+
+function renderInflowPS(){
+  if(_infMode.ps==='all'){
+    _mkLineChart('c-psi',_yrDs(PS_IN,'all',true));
+  } else {
+    _mkLineChart('c-psi',_scDs2(PS_IN,_infSc.ps,true));
+  }
+}
+function onYrChangePS(){}  // kept for compat
+
+function initInflow(){
+  // Spark mini cards — use most recent year if available
+  const _prevYr=INF_YR_KEYS.find(k=>(THREE_IN[k]||[]).filter(v=>v!=null).length>=10)||'y55';
+  const _dryYr=INF_YR_KEYS.slice().sort((a,b)=>{const sa=sum(THREE_IN[a]||[]),sb=sum(THREE_IN[b]||[]);return sa-sb;})[0]||'y62';
+  const _prevPs=INF_YR_KEYS.find(k=>(PS_IN[k]||[]).filter(v=>v!=null).length>=10)||'y62';
+  _mkSparkMini('c-3tk-avg','sv-3tk-avg',THREE_IN.avg,'#3b5bdb');
+  _mkSparkMini('c-3tk-prev','sv-3tk-prev',THREE_IN[_prevYr]||THREE_IN.avg,'#2f9e44');
+  _mkSparkMini('c-3tk-dry','sv-3tk-dry',THREE_IN[_dryYr]||THREE_IN.avg,'#e03131');
+  _mkSparkMini('c-ps-avg','sv-ps-avg',PS_IN.avg,'#0c8599');
+  _mkSparkMini('c-ps-prev','sv-ps-prev',PS_IN[_prevPs]||PS_IN.avg,'#2f9e44');
+  _mkSparkMini('c-ps-dry','sv-ps-dry',PS_IN[_dryYr]||PS_IN.avg,'#e03131');
+  // Init scenario managers
+  _renderInfScMgr('dk');
+  _renderInfScMgr('ps');
+  // Main line charts
+  renderInflowDK();
+  renderInflowPS();
+  // Summary table
+  const wrap=document.getElementById('inf-tbl-wrap');
+  if(wrap){
+    const dkCols=[{k:'avg',l:'3อ่าง เฉลี่ย'},{k:'y55',l:'3อ่าง ปี 2555'},{k:'y62',l:'3อ่าง ปี 2562'}];
+    const psCols=[{k:'avg',l:'PS เฉลี่ย'},{k:'y62',l:'PS ปี 2562'}];
+    let h=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>`;
+    h+=`<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);color:var(--text3)">เดือน</th>`;
+    dkCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#3b5bdb">${c.l}</th>`);
+    psCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#0c8599">${c.l}</th>`);
+    h+=`</tr></thead><tbody>`;
+    MO.forEach((m,i)=>{
+      h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-weight:600">${m}</td>`;
+      dkCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((THREE_IN[c.k]||Array(12).fill(0))[i])}</td>`);
+      psCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((PS_IN[c.k]||Array(12).fill(0))[i])}</td>`);
+      h+=`</tr>`;
+    });
+    h+=`<tr style="background:var(--surface2);font-weight:700"><td style="padding:6px 8px">รวม</td>`;
+    dkCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(THREE_IN[c.k]||[]))}</td>`);
+    psCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(PS_IN[c.k]||[]))}</td>`);
+    h+=`</tr></tbody></table>`;
+    wrap.innerHTML=h;
+  }
+}
+
+function renderOutflowDK(){
+  if(_outMode.dk==='all'){
+    _mkLineChart('c-3tko',_yrDs(THREE_OUT_YR,'all',true));
+    _mkLineChart('c-dko',_yrDs(DK_OUT_YR,'all',false));
+    _mkLineChart('c-kyo',_yrDs(KY_OUT_YR,'all',false));
+    _mkLineChart('c-nplo',_yrDs(NPL_OUT_YR,'all',false));
+  } else {
+    _mkLineChart('c-3tko',_scDs2(THREE_OUT_YR,_outSc.dk,true));
+    _mkLineChart('c-dko',_scDs2(DK_OUT_YR,_outSc.dk,false));
+    _mkLineChart('c-kyo',_scDs2(KY_OUT_YR,_outSc.dk,false));
+    _mkLineChart('c-nplo',_scDs2(NPL_OUT_YR,_outSc.dk,false));
+  }
+}
+function onYrChangeOutDK(){}  // kept for compat
+
+function renderOutflowPS(){
+  if(_outMode.ps==='all'){
+    _mkLineChart('c-pso',_yrDs(PS_OUT_YR,'all',true));
+  } else {
+    _mkLineChart('c-pso',_scDs2(PS_OUT_YR,_outSc.ps,true));
+  }
+}
+function onYrChangeOutPS(){}  // kept for compat
+
+function initOutflow(){
+  const _prevYr=INF_YR_KEYS.find(k=>(THREE_OUT_YR[k]||[]).filter(v=>v&&v>0).length>=10)||'avg';
+  const _peakYr=INF_YR_KEYS.slice().sort((a,b)=>{const sa=sum(THREE_OUT_YR[a]||[]),sb=sum(THREE_OUT_YR[b]||[]);return sb-sa;})[0]||'avg';
+  const _prevPs=INF_YR_KEYS.find(k=>(PS_OUT_YR[k]||[]).filter(v=>v&&v>0).length>=10)||'avg';
+  _mkSparkMini('c-3tko-avg2','sv-3tko-avg',THREE_OUT_YR.avg,'#3b5bdb');
+  _mkSparkMini('c-3tko-prev2','sv-3tko-prev',THREE_OUT_YR[_prevYr]||THREE_OUT_YR.avg,'#2f9e44');
+  _mkSparkMini('c-3tko-peak2','sv-3tko-peak',THREE_OUT_YR[_peakYr]||THREE_OUT_YR.avg,'#e03131');
+  _mkSparkMini('c-pso-avg2','sv-pso-avg',PS_OUT_YR.avg,'#0c8599');
+  _mkSparkMini('c-pso-prev2','sv-pso-prev',PS_OUT_YR[_prevPs]||PS_OUT_YR.avg,'#2f9e44');
+  _mkSparkMini('c-pso-peak2','sv-pso-peak',PS_OUT_YR[_peakYr]||PS_OUT_YR.avg,'#e03131');
+  _renderOutScMgr('dk');
+  _renderOutScMgr('ps');
+  renderOutflowDK();
+  renderOutflowPS();
+  // Summary table
+  const wrap=document.getElementById('out-tbl-wrap');
+  if(wrap){
+    const dkCols=[{k:'avg',l:'3อ่าง เฉลี่ย'},{k:'y62',l:'3อ่าง ปี 2562'}];
+    const psCols=[{k:'avg',l:'PS เฉลี่ย'},{k:'y62',l:'PS ปี 2562'}];
+    let h=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>`;
+    h+=`<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);color:var(--text3)">เดือน</th>`;
+    dkCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#3b5bdb">${c.l}</th>`);
+    psCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#0c8599">${c.l}</th>`);
+    h+=`</tr></thead><tbody>`;
+    MO.forEach((m,i)=>{
+      h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-weight:600">${m}</td>`;
+      dkCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((THREE_OUT_YR[c.k]||_Z12)[i])}</td>`);
+      psCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((PS_OUT_YR[c.k]||_Z12)[i])}</td>`);
+      h+=`</tr>`;
+    });
+    h+=`<tr style="background:var(--surface2);font-weight:700"><td style="padding:6px 8px">รวม</td>`;
+    dkCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(THREE_OUT_YR[c.k]||[]))}</td>`);
+    psCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(PS_OUT_YR[c.k]||[]))}</td>`);
+    h+=`</tr></tbody></table>`;
+    wrap.innerHTML=h;
+  }
+}
+
+// ══ OUTFLOW / EXTRA POPUP (generic) ══
+let _popTank=null,_popScId=null,_popField=null;
+
+// Set forecast months (5–11) to a single MCM/day value
+function setScOutflow(tank,scId,val){
+  val=Math.max(0,parseFloat(val)||0);
+  const sc=multiSc[tank].find(x=>x.id===scId);
+  if(!sc) return;
+  for(let j=5;j<sc.outflow.length;j++) sc.outflow[j]=+val.toFixed(1);
+  if(tank==='dk')updDK();else updPS();
+}
+
+// Set forecast months (5–11) to a single MCM/month value
+function setScExtra(tank,scId,val){
+  val=Math.max(0,parseFloat(val)||0);
+  const sc=multiSc[tank].find(x=>x.id===scId);
+  if(!sc) return;
+  if(!Array.isArray(sc.extra)) sc.extra=Array(12).fill(0);
+  for(let j=5;j<sc.extra.length;j++) sc.extra[j]=+val.toFixed(1);
+  if(tank==='dk')updDK();else updPS();
+}
+
+function openOutflowPopup(tank,scId){ _openPopup(tank,scId,'outflow'); }
+function openExtraPopup(tank,scId){   _openPopup(tank,scId,'extra'); }
+
+function _openPopup(tank,scId,field){
+  _popTank=tank;_popScId=scId;_popField=field;
+  const sc=multiSc[tank].find(x=>x.id===scId);
+  if(!sc) return;
+  const isExtra=field==='extra';
+  document.getElementById('op-title').textContent=sc.label+(isExtra?' — ปรับผันน้ำเติมรายวัน':' — ปรับ Outflow รายวัน');
+  document.getElementById('op-subtitle').textContent=isExtra
+    ?'ม.ค.–พ.ค. = ไม่มีการผันน้ำ (ล็อก 0) · มิ.ย.–ธ.ค. = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ'
+    :'ม.ค.–พ.ค. = Actual (ล็อก) · มิ.ย.–ธ.ค. = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ';
+  renderPopGrid(sc,field);
+  document.getElementById('op-overlay').classList.add('open');
+}
+
+function renderPopGrid(sc,field){
+  const isExtra=field==='extra';
+  const arr=isExtra
+    ?(Array.isArray(sc.extra)?sc.extra:Array(12).fill(sc.extra||0))
+    :(sc.outflow||Array(12).fill(1.2));
+  const nMo=arr.length; // 12 or 24
+  function mkCell(i){
+    const mi=i%12;
+    const val=arr[i]!=null?arr[i]:(isExtra?0:1.2);
+    const isActual=i<5;
+    const step='0.1';
+    return`<div class="op-cell ${isActual?'op-actual':'op-forecast'}">
+      <div class="op-mo">${MO[mi]}</div>
+      ${isActual
+        ?`<div class="op-locked">${val.toFixed(1)}<span class="op-lock-icon">🔒</span></div>`
+        :`<input type="number" class="op-inp" id="opi${i}" value="${val.toFixed(1)}" min="0" step="${step}"
+           oninput="popCascade(${i},parseFloat(this.value)||0)">`}
+      <div class="op-unit">MCM/วัน</div>
+      <div class="op-monthly" id="opmo${i}">${r2(val*DAYS[mi])} MCM/เดือน</div>
+      ${!isActual?`<div class="op-cascade-hint">→ cascade</div>`:''}
+    </div>`;
+  }
+  let html=Array.from({length:12},(_,i)=>mkCell(i)).join('');
+  if(nMo>=24){
+    html+=`<div style="grid-column:1/-1;text-align:center;font-size:10px;font-weight:700;color:#6b7a9e;padding:6px 0 2px;border-top:1px dashed rgba(80,80,140,.3);margin-top:4px">── ปีที่ 2 ──</div>`;
+    html+=Array.from({length:12},(_,i)=>mkCell(12+i)).join('');
+  }
+  document.getElementById('op-grid').innerHTML=html;
+}
+
+function popCascade(fromIdx,val){
+  val=Math.max(0,parseFloat(val)||0);
+  const sc=multiSc[_popTank].find(x=>x.id===_popScId);
+  if(!sc) return;
+  const isExtra=_popField==='extra';
+  const arr=sc[_popField];
+  const maxJ=Array.isArray(arr)?arr.length:12;
+  for(let j=fromIdx;j<maxJ;j++){
+    arr[j]=+val.toFixed(1);
+    if(j>fromIdx){
+      const inp=document.getElementById('opi'+j);
+      if(inp) inp.value=val.toFixed(1);
+    }
+    const mo=document.getElementById('opmo'+j);
+    if(mo) mo.textContent=r2(val*DAYS[j%12])+' MCM/เดือน';
+  }
+  const mainId=isExtra?`sex_${_popTank}_${_popScId}`:`sod_${_popTank}_${_popScId}`;
+  const mainInp=document.getElementById(mainId);
+  if(mainInp) mainInp.value=arr[5].toFixed(1);
+}
+
+function closePopup(save){
+  document.getElementById('op-overlay').classList.remove('open');
+  if(save&&_popTank){if(_popTank==='dk')updDK();else updPS();}
+  _popTank=null;_popScId=null;_popField=null;
+}
+
+function resetScOutflow(){
+  if(!_popTank||_popScId===null||!_popField) return;
+  const sc=multiSc[_popTank].find(x=>x.id===_popScId);
+  if(!sc) return;
+  const n2=_simYears[_popTank]===2?24:12;
+  if(_popField==='extra'){
+    sc.extra=Array(n2).fill(0);
+  } else {
+    const base=(_popTank==='dk'?THREE_OUT:PS_OUT).map((v,i)=>+(v/DAYS[i]).toFixed(1));
+    sc.outflow=n2===24?[...base,...base]:base;
+  }
+  renderPopGrid(sc,_popField);
+  const isExtra=_popField==='extra';
+  const mainId=isExtra?`sex_${_popTank}_${_popScId}`:`sod_${_popTank}_${_popScId}`;
+  const mainInp=document.getElementById(mainId);
+  if(mainInp) mainInp.value=sc[_popField][5].toFixed(1);
+}
+
+// ══ TABS ══
+function goTab(name,btn){
+  document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tp-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='inflow')setTimeout(initInflow,50);
+  if(name==='out')setTimeout(initOutflow,50);
+  if(name==='dk'&&_mapDK)setTimeout(()=>_mapDK.invalidateSize(),50);
+  if(name==='ps')setTimeout(()=>{if(!CH['pslv'])updPS();initResMap('ps');if(_mapPS)_mapPS.invalidateSize();},50);
+}
+
+// ══ RESERVOIR MAP ══
+const RES_NODES=[
+  {id:'dk', lat:12.9003, lng:101.2042, label:'ดอกกราย (DK)',    color:'#3b5bdb', tank:'dk'},
+  {id:'ky', lat:12.9765, lng:101.3081, label:'คลองใหญ่ (KY)',   color:'#3b5bdb', tank:'dk'},
+  {id:'npl',lat:12.9470, lng:101.2644, label:'หนองปลาไหล (NPL)',color:'#3b5bdb', tank:'dk'},
+  {id:'ps', lat:12.9927, lng:101.5649, label:'ประแสร์ (PS)',     color:'#0c8599', tank:'ps'},
+];
+const _RES_BOUNDS=[[12.86,101.15],[13.04,101.62]];
+let _mapDK=null,_mapPS=null;
+
+function _resMarkerHtml(color,blink,faded){
+  const op=faded?0.22:1;
+  const ring=blink?`<div style="position:absolute;inset:-7px;border-radius:50%;background:${color};opacity:.55;animation:res-pulse 1.5s ease-out infinite;pointer-events:none"></div>`:'';
+  return`<div style="position:relative;width:18px;height:18px;display:flex;align-items:center;justify-content:center;opacity:${op}">${ring}<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div></div>`;
+}
+
+function initResMap(tank){
+  const elId='map-'+tank;
+  const el=document.getElementById(elId);
+  if(!el||el._leaflet_id) return;
+  const map=L.map(elId,{zoomControl:true,scrollWheelZoom:false,attributionControl:false})
+    .fitBounds(_RES_BOUNDS);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:14}).addTo(map);
+  L.control.attribution({prefix:false}).addAttribution('© OpenStreetMap').addTo(map);
+  RES_NODES.forEach(n=>{
+    const blink=n.tank===tank;
+    const faded=!blink;
+    const icon=L.divIcon({className:'',html:_resMarkerHtml(n.color,blink,faded),iconSize:[18,18],iconAnchor:[9,9],popupAnchor:[0,-14]});
+    L.marker([n.lat,n.lng],{icon}).addTo(map)
+      .bindTooltip(`<b>${n.label}</b>`,{permanent:true,direction:'top',offset:[0,-10],className:'res-tip'+(faded?' res-tip-fd':'')});
+  });
+  if(tank==='dk') _mapDK=map; else _mapPS=map;
+}
+
+function toggleNight(){
+  document.body.classList.toggle('dark');
+  const btn=document.getElementById('night-btn');
+  if(btn){const i=btn.querySelector('i');if(i)i.className=document.body.classList.contains('dark')?'ti ti-sun':'ti ti-moon';}
+  // Live-update all chart grid/tick/actual-line colors + repaint canvas background
+  const gr=_gr(),tk=_tk(),tc=_tc(),al=_al();
+  Object.values(CH).forEach(c=>{
+    if(!c||!c.options)return;
+    const s=c.options.scales;
+    if(s){['x','y'].forEach(a=>{if(s[a]){if(s[a].grid)s[a].grid.color=gr;if(s[a].ticks)s[a].ticks.color=tc;}});}
+    const ll=c.options.plugins?.legend?.labels;if(ll)ll.color=tc;
+    // Update actual line dataset colors
+    c.data.datasets.forEach(ds=>{
+      if(ds.label&&ds.label.startsWith('★ Actual')){ds.borderColor=al;ds.pointBackgroundColor=al;}
+    });
+    c.update('none');
+  });
+  // Re-render table rows (they use CSS class now, so just retrigger updDK/updPS if needed)
+  document.querySelectorAll('.tr-actual').forEach(tr=>{tr.style.background=''});
+}
+
+// ══ LOAD DATA FROM data.json ══
+async function loadDataJson() {
+  let d;
+  try { d = await fetch('data.json').then(r => r.json()); }
+  catch(e) { console.warn('loadDataJson: cannot fetch data.json, using built-in defaults'); return; }
+
+  const inf = d.inflow   || {};
+  const out = d.outflow  || {};
+  const lev = d.level_end || {};
+  const r4  = v => v != null ? +v.toFixed(4) : 0;
+
+  // ── average of last N complete years (>=10 months non-null) ──
+  function yearAvg(obj, n) {
+    const ks = Object.keys(obj)
+      .filter(k => (obj[k]||[]).filter(v=>v!=null).length >= 10)
+      .sort().slice(-n);
+    if (!ks.length) return Array(12).fill(0);
+    return Array.from({length:12}, (_,m) => {
+      const vs = ks.map(k=>(obj[k]||[])[m]).filter(v=>v!=null);
+      return vs.length ? r4(vs.reduce((a,b)=>a+b,0)/vs.length) : 0;
+    });
+  }
+
+  // ── INF_YR_KEYS: all years with ≥1 month (includes partial year like y69) ──
+  const allThreeKs = Object.keys(inf.THREE||{})
+    .filter(k => (inf.THREE[k]||[]).filter(v=>v!=null).length >= 1)
+    .sort().reverse();
+  // complete years (≥10 months) used for averages and DK_SRCS
+  const threeKs = allThreeKs.filter(k => (inf.THREE[k]||[]).filter(v=>v!=null).length >= 10);
+  INF_YR_KEYS.length = 0;
+  INF_YR_KEYS.push(...allThreeKs);
+  Object.keys(INF_YR_THAI).forEach(k => delete INF_YR_THAI[k]);
+  allThreeKs.forEach(k => { const yy=parseInt(k.slice(1)); INF_YR_THAI[k]=String(2500+yy); });
+
+  // ── Inflow per reservoir (avg, avg5, per-year) ──
+  const infMap = {THREE:THREE_IN, DK:DK_IN, KY:KY_IN, NPL:NPL_IN, PS:PS_IN};
+  Object.entries(infMap).forEach(([res, obj]) => {
+    const src = inf[res] || {};
+    // keep null for missing months so partial years (y69) show gaps instead of 0
+    Object.keys(src).forEach(k => { obj[k] = (src[k]||[]).map(v => v ?? null); });
+    obj.avg  = yearAvg(src, 10);
+    obj.avg5 = yearAvg(src, 5);
+  });
+
+  // ── Outflow averages (splice to mutate existing let arrays) ──
+  const newThreeOut = yearAvg(out.THREE||{}, 10);
+  const newPsOut    = yearAvg(out.PS||{},    10);
+  if (newThreeOut.some(v=>v>0)) THREE_OUT.splice(0, 12, ...newThreeOut);
+  if (newPsOut.some(v=>v>0))    PS_OUT.splice(0, 12, ...newPsOut);
+
+  // ── Outflow per year ──
+  function fillOutYr(yrObj, src, avgArr) {
+    yrObj.avg  = [...avgArr];
+    yrObj.avg5 = [...avgArr];
+    Object.keys(src||{}).forEach(k => { yrObj[k] = ((src||{})[k]||[]).map(v => v ?? null); });
+  }
+  fillOutYr(THREE_OUT_YR, out.THREE, THREE_OUT);
+  fillOutYr(DK_OUT_YR,    out.DK,    yearAvg(out.DK||{},  10));
+  fillOutYr(KY_OUT_YR,    out.KY,    yearAvg(out.KY||{},  10));
+  fillOutYr(NPL_OUT_YR,   out.NPL,   yearAvg(out.NPL||{}, 10));
+  fillOutYr(PS_OUT_YR,    out.PS,    PS_OUT);
+
+  // ── Latest actual level_end → ACT values + STAR_MONTH_IDX ──
+  function latestLev(levObj) {
+    const ks = Object.keys(levObj||{}).sort().reverse();
+    for (const k of ks) {
+      const arr = levObj[k]||[];
+      for (let m=11; m>=0; m--) { if(arr[m]!=null) return {val:arr[m], month:m}; }
+    }
+    return {val:0, month:5};
+  }
+  const thLev = latestLev(lev.THREE);
+  const psLev = latestLev(lev.PS);
+  THREE_ACT_JUN  = thLev.val;
+  PS_ACT_JUN     = psLev.val;
+  STAR_MONTH_IDX = thLev.month;
+
+  // ── DK_SRCS: avg + avg5 + all year keys (incl. partial years for forecast month selection) ──
+  DK_SRCS.length = 0;
+  DK_SRCS.push({v:'avg',l:'เฉลี่ย 10 ปี'}, {v:'avg5',l:'เฉลี่ย 5 ปี'});
+  allThreeKs.forEach(k => DK_SRCS.push({v:k, l:'ปี '+INF_YR_THAI[k]}));
+
+  // ── PS_SRCS: avg + avg5 + SSP scenarios + year keys ──
+  const psYrKs = Object.keys(inf.PS||{})
+    .filter(k => k.startsWith('y') && (inf.PS[k]||[]).filter(v=>v!=null).length>=10)
+    .sort().reverse();
+  PS_SRCS.length = 0;
+  PS_SRCS.push(
+    {v:'avg',l:'เฉลี่ย 10 ปี'}, {v:'avg5',l:'เฉลี่ย 5 ปี'},
+    {v:'ssp3_2030',l:'SSP3@2030'},{v:'ssp3_2050',l:'SSP3@2050'},
+    {v:'ssp5_2030',l:'SSP5@2030'},{v:'ssp5_2050',l:'SSP5@2050'}
+  );
+  psYrKs.forEach(k => PS_SRCS.push({v:k, l:'ปี '+(INF_YR_THAI[k]||k)}));
+
+  // ── Update default scenario outflow with real averages ──
+  multiSc.dk[0].outflow = THREE_OUT.map((v,i) => +(v/DAYS[i]).toFixed(3));
+  multiSc.ps[0].outflow = PS_OUT.map((v,i)    => +(v/DAYS[i]).toFixed(3));
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadDataJson();
+  renderScList('dk'); renderScList('ps');
+  updDK(); // PS tab initializes lazily on first visit (canvas must be visible for Chart.js)
+});
+</script>
+</body>
+</html>
