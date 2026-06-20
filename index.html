@@ -1095,9 +1095,9 @@ function mkTbl(data,max,crit){
     const p=pct(d.end,max);
     const col=hasCrit?scC(d.end,crit[ci]):sc(p);
     const badge=hasCrit?bdgC(d.end,crit[ci]):(p>=70?'<span class="badge b-ok">ปกติ</span>':p>=40?'<span class="badge b-warn">เฝ้าระวัง</span>':'<span class="badge b-crit">วิกฤต</span>');
-    if(i===12) h+=`<tr><td colspan="8" style="text-align:center;font-size:10px;font-weight:700;color:#6b7a9e;padding:4px 8px;background:var(--surface2);border-top:2px dashed rgba(80,80,140,.35)">── ปีที่ 2 ──</td></tr>`;
+    if(i===12) `<tr><td colspan="8" style="text-align:center;font-size:10px;font-weight:700;color:#6b7a9e;padding:4px 8px;background:var(--surface2);border-top:2px dashed rgba(80,80,140,.35)">── ปีที่ 2 ──</td></tr>`;
     const rowStyle=d.isAct?' class="tr-actual"':'';
-    h+=`<tr${rowStyle}><td class="tdm">${d.m}${d.isAct?'<span style="font-size:9px;color:#888;margin-left:4px">●</span>':''}</td>
+    `<tr${rowStyle}><td class="tdm">${d.m}${d.isAct?'<span style="font-size:9px;color:#888;margin-left:4px">●</span>':''}</td>
     <td>${f(d.begin)}</td><td class="tdh">${f(d.inflow)}</td>
     <td style="color:${d.extra>0?'#7048e8':'var(--text3)'}">${d.extra>0?'+'+f(d.extra):'—'}</td>
     <td class="tdl">${f(d.outflow)}</td>
@@ -1118,14 +1118,14 @@ function mkTbl(data,max,crit){
       <td colspan="3">—</td>
     </tr>`;
   }
-  h+=`</tbody><tfoot>`;
+  `</tbody><tfoot>`;
   if(data.length<=12){
-    h+=_totRow(data,'รวม');
+    _totRow(data,'รวม');
   } else {
-    h+=_totRow(data.slice(0,12),'รวม ปีที่ 1');
-    h+=_totRow(data.slice(12),'รวม ปีที่ 2');
+    _totRow(data.slice(0,12),'รวม ปีที่ 1');
+    _totRow(data.slice(12),'รวม ปีที่ 2');
   }
-  h+=`</tfoot>`;
+  `</tfoot>`;
   return h;
 }
 
@@ -1547,18 +1547,18 @@ function renderInflowPS(){
 // ── TABLE HELPER ─────────────────────────────────────────────────────────────
 function _buildTbl(label,color,cols,src){
   let h=`<div style="font-size:11px;font-weight:700;color:${color};margin:10px 0 4px">${label}</div>`;
-  h+=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>`;
-  h+=`<th style="text-align:left;padding:5px 7px;border-bottom:2px solid var(--border);color:var(--text3)">เดือน</th>`;
-  cols.forEach(c=>h+=`<th style="text-align:right;padding:5px 7px;border-bottom:2px solid var(--border);color:${c.color}">${c.l}</th>`);
-  h+=`</tr></thead><tbody>`;
+  `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>`;
+  `<th style="text-align:left;padding:5px 7px;border-bottom:2px solid var(--border);color:var(--text3)">เดือน</th>`;
+  cols.forEach(c=>`<th style="text-align:right;padding:5px 7px;border-bottom:2px solid var(--border);color:${c.color}">${c.l}</th>`);
+  `</tr></thead><tbody>`;
   MO.forEach((m,i)=>{
-    h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 7px;font-weight:600">${m}</td>`;
-    cols.forEach(c=>h+=`<td style="text-align:right;padding:4px 7px">${f((src[c.k]||_Z12)[i])}</td>`);
-    h+=`</tr>`;
+    `<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 7px;font-weight:600">${m}</td>`;
+    cols.forEach(c=>`<td style="text-align:right;padding:4px 7px">${f((src[c.k]||_Z12)[i])}</td>`);
+    `</tr>`;
   });
-  h+=`<tr style="background:var(--surface2);font-weight:700"><td style="padding:5px 7px">รวม</td>`;
-  cols.forEach(c=>h+=`<td style="text-align:right;padding:5px 7px">${f(sum(src[c.k]||[]))}</td>`);
-  h+=`</tr></tbody></table></div>`;
+  `<tr style="background:var(--surface2);font-weight:700"><td style="padding:5px 7px">รวม</td>`;
+  cols.forEach(c=>`<td style="text-align:right;padding:5px 7px">${f(sum(src[c.k]||[]))}</td>`);
+  `</tr></tbody></table></div>`;
   return h;
 }
 
@@ -1583,6 +1583,10 @@ function renderInflowTable(){
       ...(worstKey3?[{k:worstKey3,l:'ปีแย่สุด ('+INF_YR_THAI[worstKey3]+')',color:'#e03131'}]:[]),
       ...(curKey?[{k:curKey,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],THREE_IN);
+  } else {
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_IN);
+  }
+  if(stPs.showAll){
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',[
       {k:'avg',l:'เฉลี่ย 10ปี',color:'#0c8599'},
       ...(prevKey?[{k:prevKey,l:'ปีก่อนหน้า ('+INF_YR_THAI[prevKey]+')',color:'#2f9e44'}]:[]),
@@ -1590,10 +1594,9 @@ function renderInflowTable(){
       ...(curKey?[{k:curKey,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],PS_IN);
   } else {
-    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_IN);
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',stPs.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),PS_IN);
   }
-  if(note)h+=`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
+  if(note)`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
   wrap.innerHTML=h;
 }
 
@@ -1670,6 +1673,10 @@ function renderOutflowTable(){
       ...(worstT?[{k:worstT,l:'ปีสูงสุด ('+outYrThai(worstT)+')',color:'#e03131'}]:[]),
       ...(curT?[{k:curT,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],THREE_OUT_YR);
+  } else {
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_OUT_YR);
+  }
+  if(stPs.showAll){
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',[
       {k:'avg',l:'เฉลี่ย 10ปี',color:'#0c8599'},
       ...(prevP?[{k:prevP,l:'ปีก่อนหน้า ('+outYrThai(prevP)+')',color:'#2f9e44'}]:[]),
@@ -1677,10 +1684,9 @@ function renderOutflowTable(){
       ...(curP?[{k:curP,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],PS_OUT_YR);
   } else {
-    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_OUT_YR);
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',stPs.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),PS_OUT_YR);
   }
-  if(note)h+=`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
+  if(note)`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
   wrap.innerHTML=h;
 }
 
