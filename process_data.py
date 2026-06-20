@@ -1,13 +1,14 @@
 """
-process_data.py  (v2 — water_data.xlsx เป็น single source of truth)
+process_data.py  (v3 — Input Data RY.xlsx เป็น primary source สำหรับ inflow)
 
 Flow:
-  1. อ่าน water_data.xlsx  → ข้อมูลทั้งหมดที่มีอยู่
-  2. อ่าน api_historical_raw.csv  → ข้อมูล API รายวัน (ดึงโดย fetch_api_data.py)
-  3. merge: เติมช่องที่ยังว่าง + เพิ่มเดือนใหม่
-  4. คำนวณ THREE (DK+KY+NPL) ใหม่
-  5. เขียน water_data.xlsx  (อัปเดต in-place)
-  6. เขียน data.json  → dashboard
+  1. อ่าน Input Data RY.xlsx  → inflow (DK, KY, NPL, PS) — primary truth
+  2. อ่าน water_data.xlsx master  → outflow + level (+ inflow ที่ไม่มีใน Input Data)
+  3. Override master inflow ด้วยค่าจาก Input Data RY.xlsx ทุก row ที่มี
+  4. อ่าน api_historical_raw.csv  → เติมช่องที่ยังว่าง + เดือนปัจจุบัน (2569)
+  5. คำนวณ THREE (DK+KY+NPL) ใหม่
+  6. เขียน water_data.xlsx  (อัปเดต in-place)
+  7. เขียน data.json  → dashboard
 """
 
 import csv
@@ -21,9 +22,13 @@ import pandas as pd
 _DIR          = os.path.dirname(os.path.abspath(__file__))
 
 # ── ไฟล์ I/O ──
+INPUT_DATA_XL = os.path.join(_DIR, "Input Data RY.xlsx")   # primary inflow source
 MASTER_XLSX   = os.path.join(_DIR, "water_data.xlsx")
 API_HIST_CSV  = os.path.join(_DIR, "api_historical_raw.csv")
 OUTPUT_JSON   = os.path.join(_DIR, "data.json")
+# copy ไปที่ Water folder ด้วย (สำหรับ water_dashboard.html ที่เปิดใน local)
+WATER_DIR     = os.path.normpath(os.path.join(_DIR, "..", "..", "..", "..", "Water"))
+OUTPUT_JSON2  = os.path.join(WATER_DIR, "data.json") if os.path.isdir(WATER_DIR) else None
 
 # map API ID → reservoir key
 API_ID_TO_RES = {
@@ -47,7 +52,116 @@ def read_master(path):
     return df
 
 
+# ── 1b. อ่าน inflow จาก Input Data RY.xlsx (primary truth) ──
+def read_input_data_ry(path):
+    """
+    อ่าน sheet 'Inflow' ใน Input Data RY.xlsx
+    คืน DataFrame: reservoir, year (Thai), month (1–12), inflow
+    """
+    if not os.path.exists(path):
+        print(f"  ⚠ ไม่พบ {path}")
+        return pd.DataFrame(columns=["reservoir","year","month","inflow"])
+
+    wb = openpyxl.load_workbook(path, read_only=True)
+    ws = wb["Inflow"]
+    rows = list(ws.iter_rows(values_only=True))
+
+    # หา header row ของแต่ละ reservoir (ค่า col[1] เป็น 'DK','KY','NPL','PS')
+    header_indices = [i for i, r in enumerate(rows) if r[1] in ("DK","KY","NPL","PS")]
+
+    records = []
+    for hi in header_indices:
+        res_name = rows[hi][1]
+        for r in rows[hi + 1:]:
+            if r[1] is None:
+                break
+            if not isinstance(r[1], (int, float)):
+                continue
+            yr = int(r[1])
+            for mo_idx, val in enumerate(r[2:14], start=1):
+                if isinstance(val, (int, float)):
+                    records.append({
+                        "reservoir": res_name,
+                        "year":      yr,
+                        "month":     mo_idx,
+                        "inflow":    round(float(val), 4),
+                    })
+
+    df = pd.DataFrame(records)
+    res_list = df["reservoir"].unique().tolist() if not df.empty else []
+    yr_range = f"{df['year'].min()}–{df['year'].max()}" if not df.empty else "–"
+    print(f"✓ อ่าน Input Data RY.xlsx: {len(df)} เดือน  reservoir={res_list}  ปี={yr_range}")
+    return df
+
+
+def override_inflow(df_master, df_input):
+    """
+    ใช้ Input Data RY.xlsx เป็น primary source สำหรับ inflow ของ DK, KY, NPL, PS
+    - ล้าง inflow ของ DK/KY/NPL/PS ในปีก่อน 2569 ทั้งหมดก่อน (ป้องกัน API data เก่าปนเข้ามา)
+    - ใส่ค่าจาก Input Data RY.xlsx กลับเข้าไป (ทั้ง row ที่มีอยู่แล้วและ row ใหม่)
+    """
+    if df_input.empty:
+        return df_master
+
+    # ล้าง inflow เฉพาะปีก่อน 2569 สำหรับ reservoir ที่มีใน Input Data
+    INPUT_RESERVOIRS = df_input["reservoir"].unique().tolist()
+    CURRENT_YEAR = datetime.now().year + 543   # ปีปัจจุบัน Thai
+    hist_mask = (
+        df_master["reservoir"].isin(INPUT_RESERVOIRS) &
+        (df_master["year"] < CURRENT_YEAR)
+    )
+    cleared = hist_mask.sum()
+    df_master.loc[hist_mask, "inflow"] = None
+
+    master_idx = {
+        (r, y, m): i
+        for i, (r, y, m) in enumerate(
+            zip(df_master["reservoir"], df_master["year"], df_master["month"])
+        )
+    }
+
+    new_rows = []
+    updated = 0
+    for _, row in df_input.iterrows():
+        key = (row["reservoir"], int(row["year"]), int(row["month"]))
+        if key in master_idx:
+            df_master.at[master_idx[key], "inflow"] = row["inflow"]
+            updated += 1
+        else:
+            new_rows.append({
+                "reservoir": row["reservoir"],
+                "year":      int(row["year"]),
+                "month":     int(row["month"]),
+                "inflow":    row["inflow"],
+                "outflow":   None,
+                "level_end": None,
+            })
+
+    if new_rows:
+        df_master = pd.concat([df_master, pd.DataFrame(new_rows)], ignore_index=True)
+
+    df_master = df_master.sort_values(["reservoir","year","month"]).reset_index(drop=True)
+    print(f"✓ override inflow: ล้าง {cleared} ค่าเก่า  อัปเดต {updated}  เพิ่ม {len(new_rows)} row ใหม่")
+    return df_master
+
+
 # ── 2. อ่าน API CSV → aggregate รายเดือน ──
+def _remove_outliers(vals):
+    """
+    กรอง daily outflow ที่ผิดปกติ (เช่น ทศนิยมหาย: 328 แทน 0.328)
+    ถ้าค่าใดสูงกว่า median ของค่าที่เหลือ > 50 เท่า ให้ตัดทิ้ง
+    """
+    if len(vals) <= 2:
+        return vals
+    non_zero = [v for v in vals if v > 0]
+    if not non_zero:
+        return vals
+    sorted_nz = sorted(non_zero)
+    median = sorted_nz[len(sorted_nz) // 2]
+    if median <= 0:
+        return vals
+    return [v for v in vals if v <= median * 50]
+
 def read_api_monthly(csv_path):
     """
     คืน DataFrame: reservoir, year (Thai), month, inflow, outflow, level_end
@@ -91,8 +205,8 @@ def read_api_monthly(csv_path):
         if v["vols"]:
             _, lv = max(v["vols"], key=lambda x: x[0])
             level_end = round(lv, 4)
-        outflow = round(sum(v["outs"]), 4) if v["outs"] else None
-        inflow  = round(sum(v["infs"]), 4) if v["infs"] else None
+        outflow = round(sum(_remove_outliers(v["outs"])), 4) if v["outs"] else None
+        inflow  = round(sum(_remove_outliers(v["infs"])), 4) if v["infs"] else None
         records.append({"reservoir": res, "year": thai_year, "month": month,
                          "inflow": inflow, "outflow": outflow, "level_end": level_end})
 
@@ -141,6 +255,10 @@ def merge_api(df_master, df_api):
     new_rows = []
     updated = 0
 
+    current_thai_year = datetime.now().year + 543
+    # reservoir ที่ Input Data RY.xlsx เป็น primary source สำหรับ inflow
+    INPUT_DATA_RES = {"DK", "KY", "NPL", "PS"}
+
     for _, api_row in df_api.iterrows():
         res   = api_row["reservoir"]
         year  = int(api_row["year"])
@@ -151,15 +269,24 @@ def merge_api(df_master, df_api):
         if key in master_idx:
             idx = master_idx[key]
             for col in ["inflow", "outflow", "level_end"]:
+                # inflow ของ DK/KY/NPL/PS ปีก่อน 2569 → ห้ามเติมจาก API
+                # (Input Data RY.xlsx เป็น source เดียว)
+                if col == "inflow" and res in INPUT_DATA_RES and year < current_thai_year:
+                    continue
                 new_val = api_row[col]
                 if pd.notna(new_val):
                     if is_recent or pd.isna(df_master.at[idx, col]):
                         df_master.at[idx, col] = round(float(new_val), 4)
                         updated += 1
         else:
+            # row ใหม่ที่ไม่มีใน master เลย
+            inf_val = None
+            if not (res in INPUT_DATA_RES and year < current_thai_year):
+                # เพิ่ม inflow เฉพาะถ้าไม่ใช่ historical ของ reservoir ใน Input Data
+                inf_val = api_row["inflow"] if pd.notna(api_row["inflow"]) else None
             new_rows.append({
                 "reservoir": res, "year": year, "month": month,
-                "inflow":    api_row["inflow"]    if pd.notna(api_row["inflow"])    else None,
+                "inflow":    inf_val,
                 "outflow":   api_row["outflow"]   if pd.notna(api_row["outflow"])   else None,
                 "level_end": api_row["level_end"] if pd.notna(api_row["level_end"]) else None,
             })
@@ -239,19 +366,25 @@ def write_json(df, path):
 # ── main ──
 if __name__ == "__main__":
     print("=" * 50)
-    print("process_data.py  — water_data.xlsx single source")
+    print("process_data.py  — Input Data RY.xlsx primary inflow")
     print("=" * 50)
 
-    # 1. อ่าน master
+    # 1. อ่าน master (outflow + level + inflow เก่า)
     df = read_master(MASTER_XLSX)
+    df = df[df["reservoir"] != "THREE"]   # ลบ THREE เก่า → คำนวณใหม่
+
+    # 1b. Override inflow ด้วย Input Data RY.xlsx (primary truth)
+    print(f"\nอ่าน Input Data RY.xlsx:")
+    df_input = read_input_data_ry(INPUT_DATA_XL)
+    print(f"\nOverride inflow:")
+    df = override_inflow(df, df_input)
 
     # 2. อ่าน API
     print(f"\nอ่าน API CSV:")
     df_api = read_api_monthly(API_HIST_CSV)
 
-    # 3. Merge
-    print(f"\nMerge:")
-    df = df[df["reservoir"] != "THREE"]   # ลบ THREE เก่า → คำนวณใหม่
+    # 3. Merge API — เติมเฉพาะช่องที่ยังว่าง + เดือนปัจจุบัน (2569)
+    print(f"\nMerge API:")
     df = merge_api(df, df_api[df_api["reservoir"] != "THREE"])
 
     # 4. คำนวณ THREE ใหม่
@@ -263,6 +396,10 @@ if __name__ == "__main__":
     print()
     write_excel(df, MASTER_XLSX)
     write_json(df, OUTPUT_JSON)
+    if OUTPUT_JSON2:
+        import shutil
+        shutil.copy2(OUTPUT_JSON, OUTPUT_JSON2)
+        print(f"✓ copy → {OUTPUT_JSON2}")
 
     # สรุป
     print("\n── สรุป ──")

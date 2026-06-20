@@ -3,15 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Water Reservoir Dashboard RY</title>
-<meta name="description" content="RY Watershed · Water Level Forecast & Scenario Planning">
-<meta property="og:title" content="Water Reservoir Dashboard RY">
-<meta property="og:description" content="RY Watershed · Water Level Forecast & Scenario Planning">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://pabank10-png.github.io/water-dashboard/">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Water Reservoir Dashboard RY">
-<meta name="twitter:description" content="RY Watershed · Water Level Forecast & Scenario Planning">
+<title>Water Reservoir Dashboard 2026 — SCGC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -354,6 +346,16 @@ body.dark .yl-actual{background:#f0f0f0}
 .sc-sel-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .sc-sel-item{display:flex;align-items:center;gap:4px}
 .sc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* ── NEW SCENARIO PANEL ── */
+.sc-panel{display:flex;flex-direction:column;gap:6px}
+.sc-showall{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;user-select:none}
+.sc-showall input{accent-color:var(--accent)}
+.sc-cards{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:2px}
+.sc-card{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:4px 7px}
+.sc-add{font-size:11px;padding:3px 9px;border:1px dashed var(--border2);border-radius:7px;background:none;color:var(--text3);cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s}
+.sc-add:hover{border-color:var(--accent);color:var(--accent)}
+.sc-x{border:none;background:none;color:var(--text3);cursor:pointer;padding:0 2px;font-size:12px;line-height:1;transition:color .15s}
+.sc-x:hover{color:var(--red)}
 .sc-out-sep{width:1px;height:22px;background:var(--border2);margin:0 6px;flex-shrink:0}
 .sc-out-btn i{font-size:13px}
 
@@ -402,6 +404,7 @@ body.dark .yl-actual{background:#f0f0f0}
     <button class="hpill" id="night-btn" onclick="toggleNight()" style="cursor:pointer" title="สลับ Night Mode"><i class="ti ti-moon" aria-hidden="true"></i></button>
     <span class="hpill green"><span class="pulse"></span>Live</span>
     <span class="hpill" id="hpill-date"><i class="ti ti-calendar-event" style="font-size:13px" aria-hidden="true"></i></span>
+    <a href="https://github.com/pabank10-png/water-dashboard/raw/main/water_data.xlsx" download class="hpill" style="text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Download Water_Data.xlsx"><i class="ti ti-download" style="font-size:13px" aria-hidden="true"></i>Download all Data</a>
     <script>
       (function(){
         const MO_TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -524,7 +527,7 @@ body.dark .yl-actual{background:#f0f0f0}
       <div style="position:relative;height:38px"><canvas id="c-3tk-prev"></canvas></div>
     </div>
     <div class="inf-mini">
-      <div class="inf-mini-lbl">3อ่าง — ปีน้อยที่สุด</div>
+      <div class="inf-mini-lbl" id="lbl-3tk-dry">3อ่าง — ปีน้อยที่สุด</div>
       <div class="inf-mini-val" id="sv-3tk-dry">—</div>
       <div class="inf-mini-sub">MCM/ปี</div>
       <div style="position:relative;height:38px"><canvas id="c-3tk-dry"></canvas></div>
@@ -542,7 +545,7 @@ body.dark .yl-actual{background:#f0f0f0}
       <div style="position:relative;height:38px"><canvas id="c-ps-prev"></canvas></div>
     </div>
     <div class="inf-mini">
-      <div class="inf-mini-lbl">ประแสร์ — ปีน้อยที่สุด</div>
+      <div class="inf-mini-lbl" id="lbl-ps-dry">ประแสร์ — ปีน้อยที่สุด</div>
       <div class="inf-mini-val" id="sv-ps-dry">—</div>
       <div class="inf-mini-sub">MCM/ปี</div>
       <div style="position:relative;height:38px"><canvas id="c-ps-dry"></canvas></div>
@@ -553,18 +556,7 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">3อ่าง monthly inflow — DK+KY+NPL (MCM)</span></span>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:5px">
-          <label for="inf-yr-dk" style="font-size:11px;color:var(--text3)">แสดง:</label>
-          <select id="inf-yr-dk" class="inf-sel" onchange="onYrChangeDK()">
-            <option value="all" selected>ทุกปี</option>
-            <option value="avg">เฉลี่ย 10 ปี</option>
-            <option value="avg5">เฉลี่ย 5 ปี</option>
-          </select>
-        </div>
-        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
-        <div class="sc-sel-row" id="inf-scrow-dk"></div>
-      </div>
+      <div id="inf-sc-panel-dk"></div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-3tk" role="img" aria-label="3-reservoir combined inflow">3-tank inflow</canvas></div>
   </div>
@@ -587,18 +579,7 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">ประแสร์ (PS) monthly inflow (MCM)</span></span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <div style="display:flex;align-items:center;gap:5px">
-          <label for="inf-yr-ps" style="font-size:11px;color:var(--text3)">แสดง:</label>
-          <select id="inf-yr-ps" class="inf-sel" onchange="onYrChangePS()">
-            <option value="all" selected>ทุกปี</option>
-            <option value="avg">เฉลี่ย 10 ปี</option>
-            <option value="avg5">เฉลี่ย 5 ปี</option>
-          </select>
-        </div>
-        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
-        <div class="sc-sel-row" id="inf-scrow-ps"></div>
-      </div>
+      <div id="inf-sc-panel-ps"></div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-psi" role="img" aria-label="PS inflow">PS inflow</canvas></div>
   </div>
@@ -627,7 +608,7 @@ body.dark .yl-actual{background:#f0f0f0}
       <div style="position:relative;height:38px"><canvas id="c-3tko-prev2"></canvas></div>
     </div>
     <div class="inf-mini">
-      <div class="inf-mini-lbl">3อ่าง — ปีสูงสุด</div>
+      <div class="inf-mini-lbl" id="lbl-3tko-peak">3อ่าง — ปีสูงสุด</div>
       <div class="inf-mini-val" id="sv-3tko-peak">—</div>
       <div class="inf-mini-sub">MCM/ปี</div>
       <div style="position:relative;height:38px"><canvas id="c-3tko-peak2"></canvas></div>
@@ -645,7 +626,7 @@ body.dark .yl-actual{background:#f0f0f0}
       <div style="position:relative;height:38px"><canvas id="c-pso-prev2"></canvas></div>
     </div>
     <div class="inf-mini">
-      <div class="inf-mini-lbl">ประแสร์ — ปีสูงสุด</div>
+      <div class="inf-mini-lbl" id="lbl-pso-peak">ประแสร์ — ปีสูงสุด</div>
       <div class="inf-mini-val" id="sv-pso-peak">—</div>
       <div class="inf-mini-sub">MCM/ปี</div>
       <div style="position:relative;height:38px"><canvas id="c-pso-peak2"></canvas></div>
@@ -656,18 +637,7 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">3อ่าง monthly outflow — DK+KY+NPL (MCM)</span></span>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:5px">
-          <label for="out-yr-dk" style="font-size:11px;color:var(--text3)">แสดง:</label>
-          <select id="out-yr-dk" class="inf-sel" onchange="onYrChangeOutDK()">
-            <option value="all" selected>ทุกปี</option>
-            <option value="avg">เฉลี่ย 10 ปี</option>
-            <option value="avg5">เฉลี่ย 5 ปี</option>
-          </select>
-        </div>
-        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
-        <div class="sc-sel-row" id="out-scrow-dk"></div>
-      </div>
+      <div id="out-sc-panel-dk"></div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-3tko" role="img" aria-label="3อ่าง outflow combined">3อ่าง outflow</canvas></div>
   </div>
@@ -690,18 +660,7 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">ประแสร์ (PS) monthly outflow (MCM)</span></span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <div style="display:flex;align-items:center;gap:5px">
-          <label for="out-yr-ps" style="font-size:11px;color:var(--text3)">แสดง:</label>
-          <select id="out-yr-ps" class="inf-sel" onchange="onYrChangeOutPS()">
-            <option value="all" selected>ทุกปี</option>
-            <option value="avg">เฉลี่ย 10 ปี</option>
-            <option value="avg5">เฉลี่ย 5 ปี</option>
-          </select>
-        </div>
-        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
-        <div class="sc-sel-row" id="out-scrow-ps"></div>
-      </div>
+      <div id="out-sc-panel-ps"></div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-pso" role="img" aria-label="PS outflow">PS outflow</canvas></div>
   </div>
@@ -1425,7 +1384,7 @@ function updPS(){
 
 // ══ INFLOW TAB ══
 // ══ INFLOW DATA ══
-const SC_COLORS=['#3b5bdb','#2f9e44','#e03131'];
+const SC_COLORS=['#3b5bdb','#2f9e44','#e03131','#ae3ec9'];
 // Year-view dropdown constants
 // INF_YR_KEYS, INF_YR_THAI populated dynamically in loadData()
 let INF_YR_KEYS=[];
@@ -1473,6 +1432,31 @@ function _mkSparkMini(canvasId,valId,data,color){
   });
 }
 
+let _ttHide=null;
+function _externalTooltip(context){
+  const {tooltip}=context;
+  let el=document.getElementById('_chart-tt');
+  if(!el){
+    el=document.createElement('div');
+    el.id='_chart-tt';
+    el.style.cssText='position:fixed;right:14px;bottom:14px;background:rgba(15,42,51,0.97);color:#dcf0f0;border:1px solid rgba(255,255,255,0.15);padding:10px 14px;border-radius:8px;pointer-events:auto;font-size:11.5px;max-height:320px;overflow-y:auto;min-width:200px;z-index:9999;opacity:0;transition:opacity 0.15s;box-shadow:0 4px 20px rgba(0,0,0,0.5)';
+    el.addEventListener('mouseenter',()=>clearTimeout(_ttHide));
+    el.addEventListener('mouseleave',()=>{_ttHide=setTimeout(()=>{el.style.opacity='0';},300);});
+    document.body.appendChild(el);
+  }
+  if(tooltip.opacity===0){
+    clearTimeout(_ttHide);
+    _ttHide=setTimeout(()=>{el.style.opacity='0';},600);
+    return;
+  }
+  clearTimeout(_ttHide);
+  const title=tooltip.title?.[0]||'';
+  const items=[...(tooltip.dataPoints||[])].filter(i=>i.parsed.y!=null).sort((a,b)=>b.parsed.y-a.parsed.y);
+  el.innerHTML=`<div style="font-weight:600;color:#9fc2c5;margin-bottom:5px;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:4px">${title}</div>`+
+    items.map(i=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:1.5px 0"><span style="color:${i.dataset.borderColor};white-space:nowrap">${i.dataset.label}</span><span style="font-variant-numeric:tabular-nums">${i.parsed.y.toFixed(2)}</span></div>`).join('');
+  el.style.opacity='1';
+}
+
 function _mkLineChart(canvasId,datasets){
   kc(canvasId);
   const el=document.getElementById(canvasId);if(!el)return;
@@ -1480,198 +1464,250 @@ function _mkLineChart(canvasId,datasets){
     type:'line',
     data:{labels:MO,datasets},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc()}}},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:10},boxWidth:9,color:_tc()}},
+        tooltip:{enabled:false,mode:'index',intersect:false,external:_externalTooltip}
+      },
       scales:{y:{grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:_tk()}}}
   });
 }
 
-// Build 3 scenario selectors dynamically inside a row div
-function _buildScRow(rowId,pfx,onChange,defs){
-  const wrap=document.getElementById(rowId);
-  if(!wrap||wrap.dataset.built)return;
-  wrap.dataset.built='1';
-  const yOpts='<option value="avg">เฉลี่ย 10 ปี</option><option value="avg5">เฉลี่ย 5 ปี</option>'+
-    INF_YR_KEYS.map(k=>`<option value="${k}">ปี ${INF_YR_THAI[k]}</option>`).join('')+
-    '<option value="none">— ไม่แสดง —</option>';
-  SC_COLORS.forEach((c,i)=>{
-    const item=document.createElement('div');
-    item.className='sc-sel-item';
-    item.innerHTML=`<div class="sc-dot" style="background:${c}"></div>`+
-      `<select id="${pfx}${i+1}" class="inf-sel" onchange="${onChange}()">${yOpts}</select>`;
-    wrap.appendChild(item);
-    const sel=document.getElementById(`${pfx}${i+1}`);
-    if(sel&&defs[i])sel.value=defs[i];
-  });
+// ── SCENARIO PANEL STATE ─────────────────────────────────────────────────────
+const _SP={
+  infDK:{showAll:true,scs:[{id:0,key:'avg'}],nextId:1,_render:null},
+  infPS:{showAll:true,scs:[{id:0,key:'avg'}],nextId:1,_render:null},
+  outDK:{showAll:true,scs:[{id:0,key:'avg'}],nextId:1,_render:null},
+  outPS:{showAll:true,scs:[{id:0,key:'avg'}],nextId:1,_render:null},
+};
+
+function _scLbl(k){
+  return k==='avg'?'เฉลี่ย 10ปี':k==='avg5'?'เฉลี่ย 5ปี':('ปี '+(INF_YR_THAI[k]||String(2500+parseInt(k.slice(1)))));
 }
 
-// Get keys from 3 selectors (filter 'none')
-function _sc3Keys(pfx){
-  return [1,2,3].map(n=>{const e=document.getElementById(`${pfx}${n}`);return e?e.value:'none';}).filter(k=>k!=='none');
-}
-
-// Build datasets from keys+source (for 3-selector mode)
 function _scDs(src,keys,bold){
   const lnW=bold?2.5:2,prR=bold?4:3,prW=bold?1.5:1;
-  const lbl=k=>k==='avg'?'เฉลี่ย 10 ปี':k==='avg5'?'เฉลี่ย 5 ปี':('ปี '+(INF_YR_THAI[k]||k));
-  return keys.map((k,i)=>({label:lbl(k),data:src[k]||_Z12,borderColor:SC_COLORS[i%3],backgroundColor:SC_COLORS[i%3]+'22',fill:false,tension:.35,borderWidth:lnW,pointRadius:prR,pointBackgroundColor:SC_COLORS[i%3],pointBorderColor:'#fff',pointBorderWidth:prW}));
+  return keys.map((k,i)=>({label:_scLbl(k),data:src[k]||_Z12,borderColor:SC_COLORS[i%4],backgroundColor:SC_COLORS[i%4]+'22',fill:false,tension:.35,borderWidth:lnW,pointRadius:prR,pointBackgroundColor:SC_COLORS[i%4],pointBorderColor:'#fff',pointBorderWidth:prW}));
 }
 
+function _buildScPanel(panelId,stateKey,opts,renderFn){
+  const panel=document.getElementById(panelId);
+  if(!panel)return;
+  const st=_SP[stateKey];
+  function render(){
+    const optHtml=opts.map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
+    const cardsHtml=st.scs.map((s,i)=>`
+      <div class="sc-card">
+        <div class="sc-dot" style="background:${SC_COLORS[i%4]}"></div>
+        <select class="inf-sel" onchange="_spChange('${stateKey}',${s.id},this.value)">${optHtml}</select>
+        ${st.scs.length>1?`<button class="sc-x" onclick="_spRm('${stateKey}',${s.id})">✕</button>`:''}
+      </div>`).join('')+(st.scs.length<4?`<button class="sc-add" onclick="_spAdd('${stateKey}')">+ เพิ่ม</button>`:'');
+    panel.innerHTML=`<div class="sc-panel">
+      <label class="sc-showall"><input type="checkbox" ${st.showAll?'checked':''} onchange="_spToggle('${stateKey}',this.checked)"> แสดงทุกปี</label>
+      ${st.showAll?'':'<div class="sc-cards">'+cardsHtml+'</div>'}
+    </div>`;
+    if(!st.showAll){
+      panel.querySelectorAll('.sc-card select').forEach((sel,i)=>{if(st.scs[i])sel.value=st.scs[i].key;});
+    }
+    renderFn();
+  }
+  st._render=render;
+  render();
+}
+function _spToggle(k,v){_SP[k].showAll=v;if(!v&&!_SP[k].scs.length)_SP[k].scs=[{id:0,key:'avg'}];if(_SP[k]._render)_SP[k]._render();}
+function _spAdd(k){const st=_SP[k];if(st.scs.length>=4)return;st.scs.push({id:st.nextId++,key:'avg'});if(st._render)st._render();}
+function _spRm(k,id){const st=_SP[k];if(st.scs.length<=1)return;st.scs=st.scs.filter(s=>s.id!==id);if(st._render)st._render();}
+function _spChange(k,id,val){const s=_SP[k].scs.find(x=>x.id===id);if(s)s.key=val;if(_SP[k]._render)_SP[k]._render();}
+
+// ── INFLOW RENDER ─────────────────────────────────────────────────────────────
 function renderInflowDK(){
-  const yr=document.getElementById('inf-yr-dk')?.value||'all';
-  if(yr==='all'){
+  const st=_SP.infDK;
+  if(st.showAll){
     _mkLineChart('c-3tk',_yrDs(THREE_IN,'all',true));
     _mkLineChart('c-dki',_yrDs(DK_IN,'all',false));
     _mkLineChart('c-kyi',_yrDs(KY_IN,'all',false));
     _mkLineChart('c-npli',_yrDs(NPL_IN,'all',false));
   } else {
-    const keys=_sc3Keys('inf-sc');
+    const keys=st.scs.map(s=>s.key);
     _mkLineChart('c-3tk',_scDs(THREE_IN,keys,true));
     _mkLineChart('c-dki',_scDs(DK_IN,keys,false));
     _mkLineChart('c-kyi',_scDs(KY_IN,keys,false));
     _mkLineChart('c-npli',_scDs(NPL_IN,keys,false));
   }
-}
-
-// Year dropdown preset: set sc1=yr, sc2/sc3=none, then render
-function onYrChangeDK(){
-  const yr=document.getElementById('inf-yr-dk')?.value||'all';
-  if(yr!=='all'){
-    [1,2,3].forEach(n=>{const e=document.getElementById(`inf-sc${n}`);if(e)e.value=n===1?yr:'none';});
-  }
-  renderInflowDK();
+  renderInflowTable();
 }
 
 function renderInflowPS(){
-  const yr=document.getElementById('inf-yr-ps')?.value||'all';
-  if(yr==='all'){
-    _mkLineChart('c-psi',_yrDs(PS_IN,'all',true));
-  } else {
-    const keys=_sc3Keys('inf-sc-ps');
-    _mkLineChart('c-psi',_scDs(PS_IN,keys,true));
-  }
+  const st=_SP.infPS;
+  if(st.showAll){_mkLineChart('c-psi',_yrDs(PS_IN,'all',true));}
+  else {_mkLineChart('c-psi',_scDs(PS_IN,st.scs.map(s=>s.key),true));}
+  renderInflowTable();
 }
 
-function onYrChangePS(){
-  const yr=document.getElementById('inf-yr-ps')?.value||'all';
-  if(yr!=='all'){
-    [1,2,3].forEach(n=>{const e=document.getElementById(`inf-sc-ps${n}`);if(e)e.value=n===1?yr:'none';});
+// ── TABLE HELPER ─────────────────────────────────────────────────────────────
+function _buildTbl(label,color,cols,src){
+  let h=`<div style="font-size:11px;font-weight:700;color:${color};margin:10px 0 4px">${label}</div>`;
+  h+=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>`;
+  h+=`<th style="text-align:left;padding:5px 7px;border-bottom:2px solid var(--border);color:var(--text3)">เดือน</th>`;
+  cols.forEach(c=>h+=`<th style="text-align:right;padding:5px 7px;border-bottom:2px solid var(--border);color:${c.color}">${c.l}</th>`);
+  h+=`</tr></thead><tbody>`;
+  MO.forEach((m,i)=>{
+    h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 7px;font-weight:600">${m}</td>`;
+    cols.forEach(c=>h+=`<td style="text-align:right;padding:4px 7px">${f((src[c.k]||_Z12)[i])}</td>`);
+    h+=`</tr>`;
+  });
+  h+=`<tr style="background:var(--surface2);font-weight:700"><td style="padding:5px 7px">รวม</td>`;
+  cols.forEach(c=>h+=`<td style="text-align:right;padding:5px 7px">${f(sum(src[c.k]||[]))}</td>`);
+  h+=`</tr></tbody></table></div>`;
+  return h;
+}
+
+// ── INFLOW TABLE ─────────────────────────────────────────────────────────────
+function renderInflowTable(){
+  const wrap=document.getElementById('inf-tbl-wrap');
+  if(!wrap)return;
+  const curTY=new Date().getFullYear()+543;
+  const histKeys=INF_YR_KEYS.filter(k=>/^y\d{2}$/.test(k)&&(2500+parseInt(k.slice(1)))<curTY);
+  const prevKey=histKeys[0]||null;
+  const curKey=INF_YR_KEYS.find(k=>(2500+parseInt(k.slice(1)))===curTY)||null;
+  const worstKey3=histKeys.length?histKeys.reduce((b,k)=>sum(THREE_IN[k]||[])<sum(THREE_IN[b]||[])?k:b,histKeys[0]):null;
+  const worstKeyPs=histKeys.length?histKeys.reduce((b,k)=>sum(PS_IN[k]||[])<sum(PS_IN[b]||[])?k:b,histKeys[0]):null;
+  let note='';
+  if(curKey&&THREE_IN[curKey]){const lm=THREE_IN[curKey].reduce((b,v,i)=>v>0?i:b,-1);if(lm>=0)note=`* ข้อมูล ณ เดือน ${MO[lm]} ${curTY}`;}
+  const st=_SP.infDK,stPs=_SP.infPS;
+  let h='';
+  if(st.showAll){
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',[
+      {k:'avg',l:'เฉลี่ย 10ปี',color:'#3b5bdb'},
+      ...(prevKey?[{k:prevKey,l:'ปีก่อนหน้า ('+INF_YR_THAI[prevKey]+')',color:'#2f9e44'}]:[]),
+      ...(worstKey3?[{k:worstKey3,l:'ปีแย่สุด ('+INF_YR_THAI[worstKey3]+')',color:'#e03131'}]:[]),
+      ...(curKey?[{k:curKey,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
+    ],THREE_IN);
+    h+=_buildTbl('ประแสร์ (PS)','#0c8599',[
+      {k:'avg',l:'เฉลี่ย 10ปี',color:'#0c8599'},
+      ...(prevKey?[{k:prevKey,l:'ปีก่อนหน้า ('+INF_YR_THAI[prevKey]+')',color:'#2f9e44'}]:[]),
+      ...(worstKeyPs?[{k:worstKeyPs,l:'ปีแย่สุด ('+INF_YR_THAI[worstKeyPs]+')',color:'#e03131'}]:[]),
+      ...(curKey?[{k:curKey,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
+    ],PS_IN);
+  } else {
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_IN);
+    h+=_buildTbl('ประแสร์ (PS)','#0c8599',stPs.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),PS_IN);
   }
-  renderInflowPS();
+  if(note)h+=`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
+  wrap.innerHTML=h;
 }
 
 function initInflow(){
-  // Spark mini cards
+  const curTY=new Date().getFullYear()+543;
+  const histKeys=INF_YR_KEYS.filter(k=>/^y\d{2}$/.test(k)&&(2500+parseInt(k.slice(1)))<curTY);
+  const prevKey=histKeys[0]||'avg';
+  const _fullYr=arr=>(arr||[]).filter(v=>v!=null).length>=12;
+  const validKeys3=histKeys.filter(k=>_fullYr(THREE_IN[k]));
+  const dryKey3=validKeys3.length?validKeys3.reduce((b,k)=>sum(THREE_IN[k]||[])<sum(THREE_IN[b]||[])?k:b,validKeys3[0]):'avg';
+  const validKeysPs=histKeys.filter(k=>_fullYr(PS_IN[k]));
+  const dryKeyPs=validKeysPs.length?validKeysPs.reduce((b,k)=>sum(PS_IN[k]||[])<sum(PS_IN[b]||[])?k:b,validKeysPs[0]):'avg';
   _mkSparkMini('c-3tk-avg','sv-3tk-avg',THREE_IN.avg,'#3b5bdb');
-  _mkSparkMini('c-3tk-prev','sv-3tk-prev',THREE_IN.y55,'#2f9e44');
-  _mkSparkMini('c-3tk-dry','sv-3tk-dry',THREE_IN.y62,'#e03131');
+  _mkSparkMini('c-3tk-prev','sv-3tk-prev',THREE_IN[prevKey]||_Z12,'#2f9e44');
+  _mkSparkMini('c-3tk-dry','sv-3tk-dry',THREE_IN[dryKey3]||_Z12,'#e03131');
   _mkSparkMini('c-ps-avg','sv-ps-avg',PS_IN.avg,'#0c8599');
-  _mkSparkMini('c-ps-prev','sv-ps-prev',PS_IN.y62,'#2f9e44');
-  _mkSparkMini('c-ps-dry','sv-ps-dry',PS_IN.y62,'#e03131');
-  // Build 3-selector rows (dynamic, once per init)
-  _buildScRow('inf-scrow-dk','inf-sc','renderInflowDK',['avg','y62','none']);
-  _buildScRow('inf-scrow-ps','inf-sc-ps','renderInflowPS',['avg','y62','none']);
-  // Main line charts
-  renderInflowDK();
-  renderInflowPS();
-  // Summary table
-  const wrap=document.getElementById('inf-tbl-wrap');
-  if(wrap){
-    const dkCols=[{k:'avg',l:'3อ่าง เฉลี่ย'},{k:'y55',l:'3อ่าง ปี 2555'},{k:'y62',l:'3อ่าง ปี 2562'}];
-    const psCols=[{k:'avg',l:'PS เฉลี่ย'},{k:'y62',l:'PS ปี 2562'}];
-    let h=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>`;
-    h+=`<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);color:var(--text3)">เดือน</th>`;
-    dkCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#3b5bdb">${c.l}</th>`);
-    psCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#0c8599">${c.l}</th>`);
-    h+=`</tr></thead><tbody>`;
-    MO.forEach((m,i)=>{
-      h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-weight:600">${m}</td>`;
-      dkCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((THREE_IN[c.k]||Array(12).fill(0))[i])}</td>`);
-      psCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((PS_IN[c.k]||Array(12).fill(0))[i])}</td>`);
-      h+=`</tr>`;
-    });
-    h+=`<tr style="background:var(--surface2);font-weight:700"><td style="padding:6px 8px">รวม</td>`;
-    dkCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(THREE_IN[c.k]||[]))}</td>`);
-    psCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(PS_IN[c.k]||[]))}</td>`);
-    h+=`</tr></tbody></table>`;
-    wrap.innerHTML=h;
-  }
+  _mkSparkMini('c-ps-prev','sv-ps-prev',PS_IN[prevKey]||_Z12,'#2f9e44');
+  _mkSparkMini('c-ps-dry','sv-ps-dry',PS_IN[dryKeyPs]||_Z12,'#e03131');
+  const el3d=document.getElementById('lbl-3tk-dry');if(el3d)el3d.textContent='3อ่าง — ปีน้อยที่สุด ('+(INF_YR_THAI[dryKey3]||'')+')';
+  const elPd=document.getElementById('lbl-ps-dry');if(elPd)elPd.textContent='ประแสร์ — ปีน้อยที่สุด ('+(INF_YR_THAI[dryKeyPs]||'')+')';
+  const infOpts=[{v:'avg',l:'เฉลี่ย 10 ปี'},{v:'avg5',l:'เฉลี่ย 5 ปี'},...INF_YR_KEYS.map(k=>({v:k,l:'ปี '+INF_YR_THAI[k]}))];
+  _buildScPanel('inf-sc-panel-dk','infDK',infOpts,renderInflowDK);
+  _buildScPanel('inf-sc-panel-ps','infPS',infOpts,renderInflowPS);
 }
 
+// ── OUTFLOW RENDER ────────────────────────────────────────────────────────────
 function renderOutflowDK(){
-  const yr=document.getElementById('out-yr-dk')?.value||'all';
-  if(yr==='all'){
+  const st=_SP.outDK;
+  if(st.showAll){
     _mkLineChart('c-3tko',_yrDs(THREE_OUT_YR,'all',true));
     _mkLineChart('c-dko',_yrDs(DK_OUT_YR,'all',false));
     _mkLineChart('c-kyo',_yrDs(KY_OUT_YR,'all',false));
     _mkLineChart('c-nplo',_yrDs(NPL_OUT_YR,'all',false));
   } else {
-    const keys=_sc3Keys('out-sc');
+    const keys=st.scs.map(s=>s.key);
     _mkLineChart('c-3tko',_scDs(THREE_OUT_YR,keys,true));
     _mkLineChart('c-dko',_scDs(DK_OUT_YR,keys,false));
     _mkLineChart('c-kyo',_scDs(KY_OUT_YR,keys,false));
     _mkLineChart('c-nplo',_scDs(NPL_OUT_YR,keys,false));
   }
-}
-
-function onYrChangeOutDK(){
-  const yr=document.getElementById('out-yr-dk')?.value||'all';
-  if(yr!=='all'){
-    [1,2,3].forEach(n=>{const e=document.getElementById(`out-sc${n}`);if(e)e.value=n===1?yr:'none';});
-  }
-  renderOutflowDK();
+  renderOutflowTable();
 }
 
 function renderOutflowPS(){
-  const yr=document.getElementById('out-yr-ps')?.value||'all';
-  if(yr==='all'){
-    _mkLineChart('c-pso',_yrDs(PS_OUT_YR,'all',true));
-  } else {
-    const keys=_sc3Keys('out-sc-ps');
-    _mkLineChart('c-pso',_scDs(PS_OUT_YR,keys,true));
-  }
+  const st=_SP.outPS;
+  if(st.showAll){_mkLineChart('c-pso',_yrDs(PS_OUT_YR,'all',true));}
+  else{_mkLineChart('c-pso',_scDs(PS_OUT_YR,st.scs.map(s=>s.key),true));}
+  renderOutflowTable();
 }
 
-function onYrChangeOutPS(){
-  const yr=document.getElementById('out-yr-ps')?.value||'all';
-  if(yr!=='all'){
-    [1,2,3].forEach(n=>{const e=document.getElementById(`out-sc-ps${n}`);if(e)e.value=n===1?yr:'none';});
+// ── OUTFLOW TABLE ─────────────────────────────────────────────────────────────
+function renderOutflowTable(){
+  const wrap=document.getElementById('out-tbl-wrap');
+  if(!wrap)return;
+  const curTY=new Date().getFullYear()+543;
+  const _yrK=o=>Object.keys(o).filter(k=>/^y\d{2}$/.test(k)).sort((a,b)=>parseInt(b.slice(1))-parseInt(a.slice(1)));
+  const outYrThai=k=>k?String(2500+parseInt(k.slice(1))):'';
+  const tKeys=_yrK(THREE_OUT_YR),pKeys=_yrK(PS_OUT_YR);
+  const histT=tKeys.filter(k=>(2500+parseInt(k.slice(1)))<curTY);
+  const histP=pKeys.filter(k=>(2500+parseInt(k.slice(1)))<curTY);
+  const prevT=histT[0]||null,prevP=histP[0]||null;
+  const curT=tKeys.find(k=>(2500+parseInt(k.slice(1)))===curTY)||null;
+  const curP=pKeys.find(k=>(2500+parseInt(k.slice(1)))===curTY)||null;
+  const worstT=histT.length?histT.reduce((b,k)=>sum(THREE_OUT_YR[k]||[])>sum(THREE_OUT_YR[b]||[])?k:b,histT[0]):null;
+  const worstP=histP.length?histP.reduce((b,k)=>sum(PS_OUT_YR[k]||[])>sum(PS_OUT_YR[b]||[])?k:b,histP[0]):null;
+  let note='';
+  if(curT&&THREE_OUT_YR[curT]){const lm=THREE_OUT_YR[curT].reduce((b,v,i)=>v>0?i:b,-1);if(lm>=0)note=`* ข้อมูล ณ เดือน ${MO[lm]} ${curTY}`;}
+  const st=_SP.outDK,stPs=_SP.outPS;
+  let h='';
+  if(st.showAll){
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',[
+      {k:'avg',l:'เฉลี่ย 10ปี',color:'#3b5bdb'},
+      ...(prevT?[{k:prevT,l:'ปีก่อนหน้า ('+outYrThai(prevT)+')',color:'#2f9e44'}]:[]),
+      ...(worstT?[{k:worstT,l:'ปีสูงสุด ('+outYrThai(worstT)+')',color:'#e03131'}]:[]),
+      ...(curT?[{k:curT,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
+    ],THREE_OUT_YR);
+    h+=_buildTbl('ประแสร์ (PS)','#0c8599',[
+      {k:'avg',l:'เฉลี่ย 10ปี',color:'#0c8599'},
+      ...(prevP?[{k:prevP,l:'ปีก่อนหน้า ('+outYrThai(prevP)+')',color:'#2f9e44'}]:[]),
+      ...(worstP?[{k:worstP,l:'ปีสูงสุด ('+outYrThai(worstP)+')',color:'#e03131'}]:[]),
+      ...(curP?[{k:curP,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
+    ],PS_OUT_YR);
+  } else {
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_OUT_YR);
+    h+=_buildTbl('ประแสร์ (PS)','#0c8599',stPs.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),PS_OUT_YR);
   }
-  renderOutflowPS();
+  if(note)h+=`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
+  wrap.innerHTML=h;
 }
 
 function initOutflow(){
+  const _yrKeys=o=>Object.keys(o).filter(k=>/^y\d{2}$/.test(k)).sort((a,b)=>parseInt(b.slice(1))-parseInt(a.slice(1)));
+  const _fullYrO=arr=>(arr||[]).filter(v=>v!=null).length>=12;
+  const _prevK=(keys)=>keys.find(k=>(2500+parseInt(k.slice(1)))<(new Date().getFullYear()+543))||keys[0];
+  const _peakK=(o,keys)=>{const full=keys.filter(k=>_fullYrO(o[k]));return full.length?full.reduce((b,k)=>sum(o[k]||[])>sum(o[b]||[])?k:b,full[0]):keys[0];};
+  const outYrThai=k=>k?String(2500+parseInt(k.slice(1))):'';
+  const threeOutKeys=_yrKeys(THREE_OUT_YR);
+  const psOutKeys=_yrKeys(PS_OUT_YR);
+  const threePrev=threeOutKeys.length?_prevK(threeOutKeys):null;
+  const threePeak=threeOutKeys.length?_peakK(THREE_OUT_YR,threeOutKeys):null;
+  const psPrev=psOutKeys.length?_prevK(psOutKeys):null;
+  const psPeak=psOutKeys.length?_peakK(PS_OUT_YR,psOutKeys):null;
   _mkSparkMini('c-3tko-avg2','sv-3tko-avg',THREE_OUT_YR.avg,'#3b5bdb');
-  _mkSparkMini('c-3tko-prev2','sv-3tko-prev',THREE_OUT_YR.avg,'#2f9e44');
-  _mkSparkMini('c-3tko-peak2','sv-3tko-peak',THREE_OUT_YR.avg,'#e03131');
+  _mkSparkMini('c-3tko-prev2','sv-3tko-prev',threePrev?THREE_OUT_YR[threePrev]:_Z12,'#2f9e44');
+  _mkSparkMini('c-3tko-peak2','sv-3tko-peak',threePeak?THREE_OUT_YR[threePeak]:_Z12,'#e03131');
   _mkSparkMini('c-pso-avg2','sv-pso-avg',PS_OUT_YR.avg,'#0c8599');
-  _mkSparkMini('c-pso-prev2','sv-pso-prev',PS_OUT_YR.avg,'#2f9e44');
-  _mkSparkMini('c-pso-peak2','sv-pso-peak',PS_OUT_YR.avg,'#e03131');
-  _buildScRow('out-scrow-dk','out-sc','renderOutflowDK',['avg','y62','none']);
-  _buildScRow('out-scrow-ps','out-sc-ps','renderOutflowPS',['avg','y62','none']);
-  renderOutflowDK();
-  renderOutflowPS();
-  // Summary table
-  const wrap=document.getElementById('out-tbl-wrap');
-  if(wrap){
-    const dkCols=[{k:'avg',l:'3อ่าง เฉลี่ย'},{k:'y62',l:'3อ่าง ปี 2562'}];
-    const psCols=[{k:'avg',l:'PS เฉลี่ย'},{k:'y62',l:'PS ปี 2562'}];
-    let h=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>`;
-    h+=`<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);color:var(--text3)">เดือน</th>`;
-    dkCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#3b5bdb">${c.l}</th>`);
-    psCols.forEach(c=>h+=`<th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--border);color:#0c8599">${c.l}</th>`);
-    h+=`</tr></thead><tbody>`;
-    MO.forEach((m,i)=>{
-      h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-weight:600">${m}</td>`;
-      dkCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((THREE_OUT_YR[c.k]||_Z12)[i])}</td>`);
-      psCols.forEach(c=>h+=`<td style="text-align:right;padding:5px 8px">${f((PS_OUT_YR[c.k]||_Z12)[i])}</td>`);
-      h+=`</tr>`;
-    });
-    h+=`<tr style="background:var(--surface2);font-weight:700"><td style="padding:6px 8px">รวม</td>`;
-    dkCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(THREE_OUT_YR[c.k]||[]))}</td>`);
-    psCols.forEach(c=>h+=`<td style="text-align:right;padding:6px 8px">${f(sum(PS_OUT_YR[c.k]||[]))}</td>`);
-    h+=`</tr></tbody></table>`;
-    wrap.innerHTML=h;
-  }
+  _mkSparkMini('c-pso-prev2','sv-pso-prev',psPrev?PS_OUT_YR[psPrev]:_Z12,'#2f9e44');
+  _mkSparkMini('c-pso-peak2','sv-pso-peak',psPeak?PS_OUT_YR[psPeak]:_Z12,'#e03131');
+  const el3p=document.getElementById('lbl-3tko-peak');if(el3p&&threePeak)el3p.textContent='3อ่าง — ปีสูงสุด ('+outYrThai(threePeak)+')';
+  const elPp=document.getElementById('lbl-pso-peak');if(elPp&&psPeak)elPp.textContent='ประแสร์ — ปีสูงสุด ('+outYrThai(psPeak)+')';
+  const outOpts=[{v:'avg',l:'เฉลี่ย 10 ปี'},{v:'avg5',l:'เฉลี่ย 5 ปี'},...threeOutKeys.map(k=>({v:k,l:'ปี '+outYrThai(k)}))];
+  const psOutOpts=[{v:'avg',l:'เฉลี่ย 10 ปี'},{v:'avg5',l:'เฉลี่ย 5 ปี'},...psOutKeys.map(k=>({v:k,l:'ปี '+outYrThai(k)}))];
+  _buildScPanel('out-sc-panel-dk','outDK',outOpts,renderOutflowDK);
+  _buildScPanel('out-sc-panel-ps','outPS',psOutOpts,renderOutflowPS);
 }
 
 // ══ OUTFLOW / EXTRA POPUP (generic) ══
@@ -1858,8 +1894,8 @@ function toggleNight(){
 async function loadData(){
   let jd;
   try{
-    const r=await fetch('data.json');
-    jd=await r.json();
+    if(window._DATA_INLINE){jd=window._DATA_INLINE;}
+    else{const r=await fetch('data.json');jd=await r.json();}
   }catch(e){
     console.warn('loadData: cannot fetch data.json',e);
     jd={inflow:{DK:{},KY:{},NPL:{},THREE:{},PS:{}},outflow:{DK:{},KY:{},NPL:{},THREE:{},PS:{}}};
@@ -1920,18 +1956,18 @@ async function loadData(){
   DK_SRCS=[{v:'avg',l:'เฉลี่ย 10ปี'},{v:'avg5',l:'เฉลี่ย 5ปี'},...threeOpts];
   PS_SRCS=[{v:'avg',l:'เฉลี่ย 10ปี'},{v:'avg5',l:'เฉลี่ย 5ปี'},...psOpts];
 
-  // outflow year objects (real historical data + fixed avg fallback)
+  // outflow year objects — avg/avg5 computed from actual data (same logic as _avgN for inflow)
   const outf=jd.outflow||{};
-  function buildOutObj(raw,fallbackAvg,yearKeys){
-    const o={avg:[...fallbackAvg],avg5:[...fallbackAvg]};
+  function buildOutObj(raw,yearKeys){
+    const o={avg:_avgN(raw,10),avg5:_avgN(raw,5)};
     yearKeys.forEach(k=>{o[k]=(raw[k]||[]).map(v=>v??0);});
     return o;
   }
-  THREE_OUT_YR=buildOutObj(outf.THREE||{},THREE_OUT,threeKeys);
-  DK_OUT_YR   =buildOutObj(outf.DK   ||{},DK_OUT,  threeKeys);
-  KY_OUT_YR   =buildOutObj(outf.KY   ||{},KY_OUT,  threeKeys);
-  NPL_OUT_YR  =buildOutObj(outf.NPL  ||{},NPL_OUT, threeKeys);
-  PS_OUT_YR   =buildOutObj(outf.PS   ||{},PS_OUT,  psKeys);
+  THREE_OUT_YR=buildOutObj(outf.THREE||{},threeKeys);
+  DK_OUT_YR   =buildOutObj(outf.DK   ||{},threeKeys);
+  KY_OUT_YR   =buildOutObj(outf.KY   ||{},threeKeys);
+  NPL_OUT_YR  =buildOutObj(outf.NPL  ||{},threeKeys);
+  PS_OUT_YR   =buildOutObj(outf.PS   ||{},psKeys);
 
   // populate main year dropdowns
   function _populateYrSel(selId,keys,thaiMap){
@@ -1953,5 +1989,6 @@ async function loadData(){
 
 document.addEventListener('DOMContentLoaded',()=>{ loadData(); });
 </script>
+<script>window._DATA_INLINE={"generated":"2026-06-20 18:14","schema_version":1,"inflow":{"DK":{"y40":[3.0022,2.7626,2.4208,6.0367,8.2576,2.0192,1.9876,1.7519,11.2241,34.8913,20.1533,4.4925],"y41":[1.9457,1.6741,1.1972,3.5083,4.9361,4.6821,12.4092,17.9328,32.2502,70.0589,17.5748,3.4737],"y42":[2.909,1.3685,2.8234,7.4218,31.6104,12.5506,5.5923,4.7245,19.7641,46.9257,39.0486,4.2347],"y43":[3.9361,1.708,3.905,11.37,21.3148,19.6152,35.6297,16.0107,10.6636,26.8517,20.3035,3.9182],"y44":[2.2925,0.7071,12.2348,14.1084,44.7993,22.5547,8.6138,20.1201,12.2723,41.1331,40.1349,4.9349],"y45":[2.4881,1.5498,1.609,5.2868,12.5292,9.3498,9.4873,5.1575,9.9819,28.4786,61.1368,11.6366],"y46":[4.0394,2.1181,7.1878,6.1451,10.84,18.8919,18.0721,17.4352,25.3332,37.3987,12.8929,3.2608],"y47":[1.9153,3.598,2.1752,2.7516,8.4933,19.8902,8.5308,12.4394,12.2093,19.1694,4.9991,3.1999],"y48":[1.0041,0.614,1.9337,3.1421,3.0466,1.7128,3.4685,3.5508,21.9889,26.2888,24.7657,10.8177],"y49":[2.8122,7.0792,7.2659,12.2397,20.4364,17.028,37.1809,6.5757,26.2764,24.4093,8.0712,3.772],"y50":[3.5768,2.9516,3.8766,5.8028,15.8999,16.1184,25.3026,16.862,11.9074,13.368,4.3085,2.5313],"y51":[1.3687,1.5844,1.7271,6.1366,8.8003,11.6817,17.8858,9.1433,31.1789,50.4995,46.857,8.1404],"y52":[5.8722,5.246,13.4925,24.8525,44.9909,32.915,17.2721,9.5341,15.5525,82.081,22.0991,12.1214],"y53":[2.2158,5.3304,2.7364,3.8829,14.4255,14.586,14.973,16.4915,39.2468,52.925,15.388,6.6183],"y54":[9.095,2.8176,6.6607,19.0768,13.2149,15.2324,10.6137,16.8704,35.0932,59.5098,17.4379,11.9857],"y55":[15.3908,8.8079,4.716,7.6752,17.0748,6.9541,7.0518,5.7266,17.6826,35.4375,18.0599,11.3064],"y56":[3.9837,2.3576,3.341,5.8589,6.8705,7.6184,6.1851,10.1117,15.5508,108.4903,40.1004,4.2006],"y57":[2.0939,1.5003,0.6869,3.0285,5.77,3.8191,1.3976,14.8725,13.769,26.1116,16.4644,4.4987],"y58":[2.7514,1.1699,2.4541,3.894,11.0098,11.603,4.3119,3.7202,31.6548,34.8217,13.9177,7.9552],"y59":[4.5173,2.1953,1.6248,0.8002,1.1952,2.6101,9.7364,7.0204,13.5251,30.9461,20.4078,4.6256],"y60":[8.094,3.2739,5.1863,14.1555,21.8486,11.4716,17.9926,14.8838,23.6473,44.7668,8.5889,3.336],"y61":[4.0884,4.6781,16.3637,14.7315,29.8161,15.3511,6.1188,5.3203,26.6442,55.7825,17.5122,6.4376],"y62":[2.4894,2.3134,1.5892,2.5821,4.6756,9.2834,4.2822,2.4324,6.7212,14.8708,4.3997,1.7074],"y63":[1.8599,1.4521,1.0847,4.8407,10.5179,15.5313,21.5084,11.9899,16.3882,29.44,11.448,3.768],"y64":[1.2511,1.2442,2.7864,8.421,14.527,5.098,5.874,8.467,38.931,57.187,41.209,9.482],"y65":[3.516,9.254,12.442,7.548,12.057,9.507,11.779,20.745,35.224,32.032,20.179,8.781],"y66":[3.55,2.43,1.502,1.516,4.455,2.197,16.191,5.585,10.202,15.816,13.384,2.643],"y67":[0.304,0.088,0.423,0.0,9.935,4.348,6.97,11.698,11.292,36.583,9.764,27.003],"y68":[0.227,0.679,1.208,5.768,15.562,6.986,6.217,2.955,19.738,20.773,8.3,1.417],"y69":[10.624,6.957,1.089,1.118,9.487,3.212,null,null,null,null,null,null]},"KY":{"y49":[3.0533,1.7289,6.1989,6.8411,14.2864,12.0189,6.0756,4.5796,22.6121,14.2776,4.1605,2.0361],"y50":[0.5356,1.7567,2.5506,6.5664,24.0784,20.0277,18.3259,11.8065,16.4215,55.4788,1.3215,4.0766],"y51":[2.544,3.6599,5.2296,6.4364,7.4493,8.4106,9.7669,0.8592,14.4424,13.2879,9.2667,3.2767],"y52":[2.8941,0.8134,8.3415,20.7011,25.1608,27.2199,22.8421,7.5674,22.2965,30.1425,5.5401,2.455],"y53":[5.0087,2.4346,1.2623,4.9934,10.7995,13.9596,18.1243,17.6203,25.528,39.7393,1.6151,2.9963],"y54":[2.0769,4.7003,5.3223,13.4822,10.2429,4.0194,7.2543,27.5143,56.2863,28.0477,1.878,1.8115],"y55":[4.3369,3.3325,3.168,3.1243,8.9826,3.8124,9.2845,14.4235,70.0311,29.0893,16.5966,2.7958],"y56":[1.9307,0.9456,2.2641,2.6615,3.0208,20.0602,14.4174,17.3065,27.0638,54.504,2.2097,2.5018],"y57":[2.2388,2.5906,2.5449,2.6644,2.9568,2.183,2.1606,10.173,23.0178,23.4462,8.6164,0.721],"y58":[2.6447,2.4445,2.3862,0.2622,0.001,0.8833,0.1432,2.8226,24.439,25.4146,1.8464,0.2397],"y59":[1.8428,4.9251,1.9123,3.4938,9.9629,9.9056,17.5,8.7899,17.436,17.5439,7.2621,2.4849],"y60":[4.4987,1.5783,1.7456,7.026,17.3113,9.6102,29.3456,11.7293,11.8903,16.734,4.3435,3.7144],"y61":[6.0497,4.7293,7.429,8.5538,14.5926,10.7956,6.7874,8.8421,20.525,16.7666,5.8695,5.0933],"y62":[3.6016,4.6274,9.6214,10.1135,6.3858,6.33,4.0934,8.1491,14.1186,9.5182,3.6473,0.8002],"y63":[0.85,0.522,1.0614,2.487,7.1876,21.7682,22.7814,14.8238,14.9605,10.534,7.064,3.957],"y64":[3.569,2.158,3.8084,2.831,19.975,4.104,4.802,9.381,8.746,26.771,7.358,2.34],"y65":[4.246,2.618,4.141,4.93,13.587,11.95,19.296,15.368,35.988,19.399,9.092,3.77],"y66":[1.842,1.668,1.404,1.443,2.901,4.549,16.19,5.191,7.717,10.732,10.455,10.503],"y67":[5.338,4.411,3.255,4.427,9.617,2.578,8.554,11.235,7.777,15.041,11.843,14.616],"y68":[13.509,10.709,6.696,2.491,5.731,6.834,8.089,9.217,13.329,15.709,21.839,14.368],"y69":[15.296,17.058,16.498,4.692,5.18,2.166,null,null,null,null,null,null]},"NPL":{"y37":[2.2539,3.479,6.5021,5.872,8.8493,19.4496,26.4619,10.9314,30.3499,41.5872,8.624,5.5596],"y38":[2.8962,1.0716,3.1922,7.9588,15.7243,14.3528,21.14,29.3457,110.9661,114.7666,20.9075,2.1606],"y39":[2.8651,1.9651,3.2096,10.2377,15.6441,39.1806,42.273,27.215,44.2773,47.4953,26.1885,4.0384],"y40":[4.8007,4.2565,6.4977,15.8865,14.8639,4.2651,3.9526,2.5065,28.3577,50.2719,20.1061,7.7704],"y41":[5.4022,6.9242,3.8649,5.8276,8.9342,7.4839,17.8936,26.9596,33.5526,47.5698,16.9632,11.0342],"y42":[8.3974,4.2006,7.1225,13.8216,38.2581,22.5728,11.9705,18.6895,38.9931,69.8152,40.2242,10.2364],"y43":[6.0703,10.3664,19.0197,10.49,17.7775,43.8728,35.2842,21.5377,20.1351,43.567,15.3937,4.9256],"y44":[6.5714,3.2497,13.1652,9.7103,26.6922,13.0122,9.0865,9.3197,11.5487,63.4045,27.9094,7.7535],"y45":[7.1696,5.0555,6.8254,11.4815,26.1639,17.7629,11.9562,13.5969,13.8272,30.6853,24.2386,18.8715],"y46":[4.2349,9.9722,15.559,15.4076,16.3763,21.8878,31.8029,23.9246,31.437,51.7233,14.5132,5.2789],"y47":[10.3945,8.8842,7.2284,9.8165,17.299,32.0083,12.229,13.7262,29.3521,21.8677,7.7454,4.5394],"y48":[12.3956,10.4882,11.1995,12.2436,10.2536,6.1015,6.446,7.0396,39.8556,42.1471,41.923,27.4046],"y49":[5.4381,7.4632,9.7669,22.4422,24.885,22.6087,29.7146,11.8632,24.9865,41.1746,10.5905,4.6746],"y50":[5.3553,4.6256,11.6608,13.6412,32.8103,35.4613,28.7308,17.8874,22.6724,15.7479,5.75,4.8184],"y51":[3.43,3.9977,7.7148,16.4844,15.4155,21.9731,29.3834,22.5577,43.4677,61.4798,27.0603,8.017],"y52":[4.0056,2.9012,10.0198,6.7075,20.8826,4.305,2.1917,9.9332,31.2738,70.9005,25.6863,7.4066],"y53":[9.1504,7.3949,6.9004,4.7352,4.7943,15.0229,20.9684,26.4581,44.1096,58.5196,14.8974,6.7823],"y54":[2.402,2.4574,6.3226,40.4304,21.3781,21.6258,15.0505,40.9181,66.4806,102.7548,17.1405,4.731],"y55":[5.9388,4.3961,7.8391,8.6246,23.7472,7.2588,8.9918,8.3951,30.0209,40.0641,18.185,12.7335],"y56":[7.0758,5.8861,11.2661,11.2959,11.2535,18.4541,12.4181,14.3209,32.3052,153.4994,48.6581,13.8938],"y57":[3.4811,5.4793,5.3737,13.94,12.6696,10.9442,8.6476,22.508,19.6464,30.4855,34.8947,10.5442],"y58":[3.2286,4.5578,7.289,17.7099,20.0113,19.0679,13.772,25.2979,67.9097,48.3816,15.5384,8.8375],"y59":[6.6417,4.5797,4.461,4.3655,2.2177,5.1111,13.9916,2.6622,19.3098,28.0832,3.8475,4.0456],"y60":[12.2459,5.7355,8.1072,12.2188,33.1673,22.727,26.5202,23.4028,28.8401,45.8902,11.9389,7.4842],"y61":[9.5352,8.1729,15.5324,36.1274,48.8703,30.72,14.5161,15.4146,45.5356,77.4507,29.7874,10.4053],"y62":[6.4424,6.0135,4.439,6.7472,12.8097,22.4124,10.5644,4.1629,17.1332,18.8095,7.6572,6.0299],"y63":[4.2487,2.8647,3.7329,7.4731,20.9132,39.0803,51.8773,26.6382,51.5517,41.53,19.24,8.917],"y64":[7.3179,4.8273,11.9639,26.11,38.69,13.86,17.52,22.54,64.5,91.33,46.38,9.84],"y65":[12.62,14.46,14.49,13.89,23.0,15.8,24.95,38.4,54.61,60.18,21.68,8.23],"y66":[7.45,6.51,7.24,12.49,16.94,8.4,26.39,8.03,17.02,36.76,11.66,2.57],"y67":[3.26,1.34,4.3,1.11,21.02,6.73,14.05,30.31,21.88,33.19,13.78,1.48],"y68":[0.74,3.11,4.67,9.63,20.86,8.36,11.29,6.29,31.81,36.67,12.45,0.1],"y69":[1.43,2.83,0.04,2.28,17.49,8.87,null,null,null,null,null,null]},"THREE":{"y49":[11.3036,16.2713,23.2317,41.523,59.6078,51.6556,72.9711,23.0185,73.875,79.8615,22.8222,10.4827],"y50":[9.4677,9.3339,18.088,26.0104,72.7886,71.6074,72.3593,46.5559,51.0013,84.5947,11.38,11.4263],"y51":[7.3427,9.242,14.6715,29.0574,31.6651,42.0654,57.0361,32.5602,89.089,125.2672,83.184,19.4341],"y52":[12.7719,8.9606,31.8538,52.2611,91.0343,64.4399,42.3059,27.0347,69.1228,183.124,53.3255,21.983],"y53":[16.3749,15.1599,10.8991,13.6115,30.0193,43.5685,54.0657,60.5699,108.8844,151.1839,31.9005,16.3969],"y54":[13.5739,9.9753,18.3056,72.9894,44.8359,40.8776,32.9185,85.3028,157.8601,190.3123,36.4564,18.5282],"y55":[25.6665,16.5365,15.7231,19.4241,49.8046,18.0253,25.3281,28.5452,117.7346,104.5909,52.8415,26.8357],"y56":[12.9902,9.1893,16.8712,19.8163,21.1448,46.1327,33.0206,41.7391,74.9198,316.4937,90.9682,20.5962],"y57":[7.8138,9.5702,8.6055,19.6329,21.3964,16.9463,12.2058,47.5535,56.4332,80.0433,59.9755,15.7639],"y58":[8.6247,8.1722,12.1293,21.8661,31.0221,31.5542,18.2271,31.8407,124.0035,108.6179,31.3025,17.0324],"y59":[13.0018,11.7001,7.9981,8.6595,13.3758,17.6268,41.228,18.4725,50.2709,76.5732,31.5174,11.1561],"y60":[24.8386,10.5877,15.0391,33.4003,72.3272,43.8088,73.8584,50.0159,64.3777,107.391,24.8713,14.5346],"y61":[19.6733,17.5803,39.3251,59.4127,93.279,56.8667,27.4223,29.577,92.7048,149.9998,53.1691,21.9362],"y62":[12.5334,12.9543,15.6496,19.4428,23.8711,38.0258,18.94,14.7444,37.973,43.1985,15.7042,8.5375],"y63":[6.9586,4.8388,5.879,14.8008,38.6187,76.3798,96.1671,53.4519,82.9004,81.504,37.752,16.642],"y64":[12.138,8.2295,18.5587,37.362,73.192,23.062,28.196,40.388,112.177,175.288,94.947,21.662],"y65":[20.382,26.332,31.073,26.368,48.644,37.257,56.025,74.513,125.822,111.611,50.951,20.781],"y66":[12.842,10.608,10.146,15.449,24.296,15.146,58.771,18.806,34.939,63.308,35.499,15.716],"y67":[8.902,5.839,7.978,5.537,40.572,13.656,29.574,53.243,40.949,84.814,35.387,43.099],"y68":[14.476,14.498,12.574,17.889,42.153,22.18,25.596,18.462,64.877,73.152,42.589,15.885],"y69":[27.35,26.845,17.627,8.09,32.157,14.248,null,null,null,null,null,null]},"PS":{"y48":[2.23,1.62,1.94,7.31,3.22,2.65,9.87,8.6,97.62,41.57,30.16,6.38],"y49":[4.47,4.96,7.35,10.74,29.14,17.48,16.26,27.8,76.87,65.76,2.74,2.5],"y50":[3.46,2.46,2.14,10.63,19.16,20.14,51.11,36.46,47.77,35.15,0.0,0.0],"y51":[1.14,0.0,0.0,11.84,44.47,25.06,28.8,34.66,109.73,54.28,6.31,0.0],"y52":[0.0,0.02,3.16,7.66,8.5,10.54,33.04,18.8,86.97,97.95,6.61,0.0],"y53":[1.87,0.77,1.79,2.01,14.13,34.05,15.5,75.55,51.43,92.26,4.25,0.81],"y54":[0.06,4.55,3.59,13.32,7.84,10.94,22.44,92.23,144.15,100.31,10.11,0.0],"y55":[8.07,0.58,0.36,0.79,12.34,8.89,31.58,11.56,179.42,74.33,5.18,0.95],"y56":[2.28,1.72,2.42,5.95,0.23,19.83,23.41,20.21,57.48,160.09,20.84,1.88],"y57":[0.0,0.0,0.88,1.62,3.63,11.36,14.17,25.22,71.5,50.68,13.12,1.04],"y58":[0.87,0.0,0.78,5.97,1.49,8.95,12.22,36.67,129.96,79.82,3.98,0.0],"y59":[1.33,0.0,0.0,0.73,4.03,8.76,30.3,31.26,43.87,77.17,11.56,0.0],"y60":[3.11,2.85,1.55,3.5,30.23,28.23,33.1,81.91,64.96,69.65,5.48,3.69],"y61":[6.53,3.28,11.8,38.48,42.04,36.0,20.28,41.7,102.81,44.15,0.75,0.0],"y62":[0.0,0.0,5.6,3.56,15.54,27.32,18.56,31.9,33.31,15.86,0.3,0.0],"y63":[0.0,0.0,0.21,0.62,2.64,14.34,22.07,50.11,53.68,53.81,3.51,2.47],"y64":[0.0,0.0,0.35,3.52,26.62,5.93,17.46,25.52,67.86,62.7,7.76,0.0],"y65":[0.56,1.51,4.03,3.13,19.86,20.59,46.78,66.5,106.99,46.58,17.68,1.46],"y66":[0.0,2.09,0.0,4.57,7.2,8.42,13.94,2.07,64.08,71.73,6.65,0.0],"y67":[0.0,0.72,1.15,0.28,57.05,24.77,51.34,54.44,55.72,50.86,2.84,0.0],"y68":[0.0,0.0,2.4,5.59,19.0,12.81,36.34,32.57,64.28,48.07,11.9,0.0],"y69":[0.0,0.0,0.0,0.0,20.97,3.65,null,null,null,null,null,null]}},"outflow":{"DK":{"y40":[6.7081,7.2653,7.7833,8.1475,14.9589,7.7857,6.9651,7.468,6.0664,6.2913,7.0533,7.4419],"y41":[6.8426,6.795,7.2418,7.2677,11.4765,9.7308,6.5692,6.8128,18.6702,63.6589,18.6348,7.5644],"y42":[8.0308,7.1215,6.8447,6.9784,19.2504,20.3506,18.6164,10.9145,7.1241,19.6257,40.1486,6.0693],"y43":[3.6927,4.3919,4.1361,11.27,32.0548,10.7752,48.5497,22.2507,7.7439,4.2377,22.0435,5.7406],"y44":[4.5098,4.112,4.6493,12.6084,50.4993,35.7347,10.8538,21.0001,11.7923,16.0131,42.8949,5.6621],"y45":[9.9529,6.8042,5.5694,8.8962,7.8092,8.3898,14.15,7.2361,5.1556,9.7986,58.8968,12.8966],"y46":[10.6121,6.2615,7.0568,8.1145,11.5378,11.8919,27.7758,15.5952,22.8932,23.6787,14.2446,9.6477],"y47":[7.8049,8.0523,8.1524,9.0374,6.2533,6.1302,9.6508,16.5994,6.4493,7.4094,16.9962,13.3293],"y48":[7.3364,7.1998,8.2784,7.6084,7.6578,7.5668,5.6539,4.0708,4.7489,6.3888,7.3057,8.3177],"y49":[9.9461,9.4733,11.8009,10.7197,8.7564,12.828,40.4641,12.4253,16.3164,20.9093,8.4712,8.3195],"y50":[10.567,9.1565,10.2666,8.1943,7.0799,8.0784,21.3426,19.382,11.0674,9.108,10.6164,9.8064],"y51":[10.6481,8.7533,8.2326,5.9165,5.4003,4.8217,4.5258,4.9033,17.3389,40.7995,51.577,12.8587],"y52":[13.3522,11.5281,14.4525,20.2125,34.8709,51.9452,15.9921,10.7028,7.2725,65.721,24.3991,21.8441],"y53":[8.8795,7.3304,9.1953,9.0817,13.5255,10.986,8.893,13.6915,26.4517,47.6157,19.2061,15.2769],"y54":[20.0805,8.7656,9.8424,9.3921,9.6373,9.299,18.7338,9.4997,22.3816,55.3194,18.6701,23.2194],"y55":[28.6756,11.9067,10.9943,10.2404,10.5209,10.6118,13.4308,12.4678,6.9584,5.029,8.212,14.6533],"y56":[11.6731,10.4953,11.2249,9.9999,5.5679,7.8887,10.0719,11.2307,10.5419,74.9554,42.4017,9.5562],"y57":[11.3416,9.8894,11.5658,10.3831,5.3315,7.6085,8.0836,4.564,4.7165,9.7833,11.815,15.6678],"y58":[15.0267,12.179,7.2775,4.7504,5.5312,5.226,6.9461,8.6559,6.9737,7.2126,16.6372,15.8908],"y59":[17.7293,16.011,9.4227,8.1739,8.1882,4.8359,3.8181,3.714,2.4669,4.8508,5.5674,9.8325],"y60":[8.518,11.3298,13.7703,16.045,13.0623,8.6551,15.1903,23.6015,5.7026,39.8917,11.677,6.4237],"y61":[6.443,9.5639,28.5496,9.326,33.4298,18.7201,6.5632,9.1232,7.6756,40.623,17.1574,9.013],"y62":[13.9463,12.5276,15.0205,13.2764,8.4787,5.7523,8.2573,6.1446,4.1996,4.0948,3.2727,3.6712],"y63":[0.0,1.581,0.631,0.0,0.0,0.0,0.133,0.0,0.0,18.877,0.0,0.0],"y64":[0.0,0.0,0.575,0.458,0.0,1.078,0.111,0.0,0.707,58.621,34.012,3.982],"y65":[0.0,0.0,0.0,0.0,4.935,8.975,2.325,11.96,15.775,15.686,12.593,5.261],"y66":[0.0,0.0,0.0,0.957,6.933,3.125,0.0,0.106,1.532,0.0,0.0,2.565],"y67":[4.336,4.945,3.722,3.476,0.029,1.163,0.127,0.0,0.038,10.471,8.517,32.457],"y68":[9.163,9.214,10.263,3.321,1.155,2.831,3.407,3.061,8.872,9.947,7.204,4.815],"y69":[15.647,11.752,6.53,5.865,4.783,3.722,null,null,null,null,null,null]},"KY":{"y48":[null,null,null,null,null,null,null,null,0.0,0.0,0.0,0.0],"y49":[6.0209,1.521,7.255,5.7329,7.9719,15.768,4.5529,2.702,17.2761,14.5338,3.2018,4.3271],"y50":[3.8555,4.1377,4.2061,7.5335,14.0903,14.2756,18.5927,15.6957,16.8876,56.2154,2.5401,4.3831],"y51":[7.7716,7.0936,7.3484,6.2454,1.1228,1.6053,1.4472,1.349,1.1158,10.7986,8.3681,4.4191],"y52":[6.0997,6.1936,7.0589,21.4851,22.3632,29.4837,28.425,7.9539,3.4682,31.473,4.7544,7.3914],"y53":[6.4833,3.7133,3.0021,6.1436,13.7402,14.3616,13.5416,11.4889,19.0673,40.161,3.2375,4.9815],"y54":[8.0211,8.1663,8.1634,4.6541,8.8163,3.9059,6.0398,8.1938,56.0743,28.8938,2.4022,4.5037],"y55":[5.7773,10.4473,7.5265,5.3797,3.1567,6.159,3.5808,11.7191,58.0956,32.9394,13.196,4.3566],"y56":[3.5683,4.1606,4.2912,4.871,8.7233,13.2402,17.9183,16.1475,17.5939,48.3187,2.2983,4.5404],"y57":[6.1521,5.2069,8.2592,10.2893,5.6574,2.7644,2.1849,5.5836,17.0689,21.5772,16.1869,4.5398],"y58":[7.7193,7.2776,3.6953,3.1732,2.974,2.278,2.3442,3.6253,5.7954,17.6561,2.1736,13.7],"y59":[9.2986,13.3955,2.631,5.8792,21.5911,13.9846,19.8939,24.0295,17.9011,17.6012,16.8426,15.4697],"y60":[11.8865,8.947,10.0201,12.8078,13.5681,13.8648,30.8828,5.1308,6.3903,16.7306,11.528,10.4942],"y61":[14.2357,13.0896,14.1681,12.401,11.6223,11.5336,13.6827,6.9538,8.6561,11.9153,7.7564,7.6167],"y62":[11.462,13.3203,16.1745,15.2888,14.3499,9.2373,21.5986,17.0075,13.0972,12.0995,9.8464,3.797],"y63":[2.58,1.66,1.403,0.479,0.0,0.0,0.257,0.0,0.0,0.0,1.027,9.121],"y64":[16.762,12.846,7.226,1.777,0.34,0.0,2.815,1.132,0.0,2.795,3.676,11.181],"y65":[10.495,5.049,5.47,9.116,7.399,6.795,8.604,16.879,10.821,24.47,4.321,5.201],"y66":[10.94,5.549,5.556,5.397,3.888,3.473,2.268,2.596,2.732,0.94,1.959,6.138],"y67":[5.692,7.065,0.618,7.47,4.073,4.001,3.309,2.369,2.89,12.373,18.862,17.679],"y68":[17.333,11.674,6.516,7.385,5.023,4.876,5.676,7.322,10.339,17.19,19.688,21.727],"y69":[20.432,17.038,18.748,9.067,7.968,3.762,null,null,null,null,null,null]},"NPL":{"y37":[3.9539,6.143,10.2125,10.8864,11.2493,9.8496,4.9421,3.5078,2.592,6.8934,7.7554,10.2654],"y38":[11.7853,6.1738,15.5062,22.6178,32.3182,30.4443,29.1089,17.2807,57.6859,71.6492,27.0146,6.1283],"y39":[7.0362,6.5822,15.3585,25.7204,28.9712,28.4957,33.547,39.3819,37.7577,20.1374,15.8901,2.9506],"y40":[13.5653,14.984,23.8369,22.4061,10.5175,21.9732,14.817,14.0518,13.0525,5.6503,6.7954,13.2356],"y41":[13.0081,12.1505,16.3849,16.4401,11.8132,13.6919,11.0243,14.8616,10.4881,22.4658,17.6791,13.4066],"y42":[10.7124,11.4805,18.7495,22.0187,33.4597,26.1056,4.8747,40.0471,12.3285,44.0072,43.3266,14.7546],"y43":[22.6906,20.8737,21.7196,17.9301,25.7653,41.6996,47.3857,21.0265,14.1588,10.9641,7.7246,13.8631],"y44":[15.1684,16.2782,19.3226,17.1354,12.3853,13.7366,19.4092,11.6244,11.16,8.3737,24.8027,16.6238],"y45":[17.4681,16.9193,18.4265,17.6265,15.721,17.5435,17.7907,16.4945,12.1973,10.1069,11.4179,16.2421],"y46":[16.6085,19.0316,19.8596,20.1522,23.3523,16.9981,20.3199,39.5729,17.1883,17.6224,20.9652,21.4675],"y47":[20.7882,17.1314,22.2276,21.8181,22.4148,23.262,19.16,18.1818,14.4999,13.8468,10.729,17.1405],"y48":[29.4518,26.4894,26.3369,21.7546,19.3434,12.3053,12.9922,11.5384,8.0552,11.0052,17.2776,21.7938],"y49":[10.1209,10.2616,12.2423,12.7057,11.0661,10.3223,29.4936,19.0253,15.3655,26.2747,12.7816,16.2996],"y50":[14.0403,17.6706,20.4998,20.1512,16.0285,27.9833,36.0162,18.8397,15.2639,12.8376,16.5657,18.22],"y51":[16.4903,16.4796,21.2278,20.4426,17.0845,15.381,14.5312,15.1487,14.4081,35.0393,34.5851,21.3867],"y52":[21.3067,18.7584,21.8911,17.7737,21.8293,27.4617,15.8117,15.5955,14.6349,45.7726,29.6748,13.206],"y53":[18.5048,19.373,21.9761,20.7473,19.474,15.18,12.9827,16.8482,29.8672,52.4668,18.1937,18.9053],"y54":[21.303,21.5772,20.9717,21.9237,22.3778,20.8893,19.6038,14.7396,47.0838,105.3799,23.6229,18.4966],"y55":[14.4234,21.167,24.2209,23.8069,18.6314,20.0406,18.1898,19.9035,17.1092,17.3911,18.0711,20.7974],"y56":[20.3156,19.0542,24.095,27.0894,27.6018,18.3373,14.7053,14.0628,12.3327,130.2317,49.6127,23.2975],"y57":[20.2149,20.7166,22.8936,21.5065,26.0568,19.953,22.9661,21.9471,18.1075,13.2254,13.3659,16.4587],"y58":[15.6654,15.6762,27.7391,30.1107,28.7957,26.0432,26.2106,23.8108,20.1276,16.6904,17.9487,17.5751],"y59":[18.2814,21.4179,29.1228,32.1235,32.8254,29.0407,25.3435,22.9619,21.0439,19.6761,19.5058,22.9511],"y60":[23.5493,24.8046,23.1916,15.2357,14.5473,29.3391,38.2911,21.7403,17.8115,31.0425,13.817,26.8444],"y61":[27.2946,22.3146,21.2489,26.1572,60.1902,47.9053,23.8121,23.4816,18.5139,55.675,34.0244,23.114],"y62":[24.5816,24.064,27.7584,27.4077,25.4161,21.9935,21.1441,15.1526,16.5827,21.6007,24.4597,31.9656],"y63":[7.794,6.356,7.049,6.395,5.301,0.0,0.0,0.0,0.0,0.0,1.679,0.824],"y64":[0.0,0.0,3.15,4.489,5.082,11.16,5.031,5.91,5.82,3.958,5.146,5.797],"y65":[5.65,4.204,10.075,7.86,5.57,9.74,6.14,12.34,26.62,31.53,19.56,4.338],"y66":[8.606,12.546,11.66,11.107,3.06,6.19,4.001,5.775,3.12,0.84,3.778,7.687],"y67":[6.597,11.18,18.1,22.42,21.01,17.45,14.75,13.41,17.54,16.61,15.77,14.67],"y68":[16.58,14.79,12.84,14.42,19.14,17.26,17.42,19.43,11.46,13.89,17.33,20.14],"y69":[20.7,16.95,17.75,18.03,17.75,13.15,null,null,null,null,null,null]},"THREE":{"y48":[null,null,null,null,null,null,null,null,12.8041,17.394,24.5833,30.1115],"y49":[26.0879,21.2559,31.2982,29.1583,27.7944,38.9183,74.5106,34.1526,48.958,61.7178,24.4546,28.9462],"y50":[28.4628,30.9648,34.9725,35.879,37.1987,50.3373,75.9515,53.9174,43.2189,78.161,29.7222,32.4095],"y51":[34.91,32.3265,36.8088,32.6045,23.6076,21.808,20.5042,21.401,32.8628,86.6374,94.5302,38.6645],"y52":[40.7586,36.4801,43.4025,59.4713,79.0634,108.8906,60.2288,34.2522,25.3756,142.9666,58.8283,42.4415],"y53":[33.8676,30.4167,34.1735,35.9726,46.7397,40.5276,35.4173,42.0286,75.3862,140.2435,40.6373,39.1637],"y54":[49.4046,38.5091,38.9775,35.9699,40.8314,34.0942,44.3774,32.4331,125.5397,189.5931,44.6952,46.2197],"y55":[48.8763,43.521,42.7417,39.427,32.309,36.8114,35.2014,44.0904,82.1632,55.3595,39.4791,39.8073],"y56":[35.557,33.7101,39.6111,41.9603,41.893,39.4662,42.6955,41.441,40.4685,253.5058,94.3127,37.3941],"y57":[37.7086,35.8129,42.7186,42.1789,37.0457,30.3259,33.2346,32.0947,39.8929,44.5859,41.3678,36.6663],"y58":[38.4114,35.1328,38.7119,38.0343,37.3009,33.5472,35.5009,36.092,32.8967,41.5591,36.7595,47.1659],"y59":[45.3093,50.8244,41.1765,46.1766,62.6047,47.8612,49.0555,50.7054,41.4119,42.1281,41.9158,48.2533],"y60":[43.9538,45.0814,46.982,44.0885,41.1777,51.859,84.3642,50.4726,29.9044,87.6648,37.022,43.7623],"y61":[47.9733,44.9681,63.9666,47.8842,105.2423,78.159,44.058,39.5586,34.8456,108.2133,58.9382,39.7437],"y62":[49.9899,49.9119,58.9534,55.9729,48.2447,36.9831,51.0,38.3047,33.8795,37.795,37.5788,39.4338],"y63":[10.374,9.597,9.083,6.874,5.301,0.0,0.39,0.0,0.0,18.877,2.706,9.945],"y64":[16.762,12.846,10.951,6.724,5.422,12.238,7.957,7.042,6.527,65.374,42.834,20.96],"y65":[16.145,9.253,15.545,16.976,17.904,25.51,17.069,41.179,53.216,71.686,36.474,14.8],"y66":[19.546,18.095,17.216,17.461,13.881,12.788,6.269,8.477,7.384,1.78,5.737,16.39],"y67":[16.625,23.19,22.44,33.366,25.112,22.614,18.186,15.779,20.468,39.454,43.149,64.806],"y68":[43.076,35.678,29.619,25.126,25.318,24.967,26.503,29.813,30.671,41.027,44.222,46.682],"y69":[56.779,45.74,43.028,32.962,30.501,20.634,null,null,null,null,null,null]},"PS":{"y48":[null,null,null,null,null,null,null,null,0.0,0.0,0.0,0.0],"y49":[8.86,1.85,4.4,8.4,0.35,33.31,27.36,19.06,13.0,33.71,10.41,4.51],"y50":[5.66,8.48,12.61,11.67,19.41,19.98,25.99,50.1,39.27,3.77,5.61,3.93],"y51":[9.48,4.09,4.88,4.87,2.92,33.41,24.87,24.66,72.61,40.03,2.3,5.95],"y52":[6.55,4.88,5.63,3.31,27.31,43.46,2.8,0.0,0.0,75.61,12.73,8.09],"y53":[7.12,4.83,8.6,7.64,7.0,43.35,22.99,8.67,34.93,46.2,11.48,4.02],"y54":[4.52,5.84,4.11,5.47,58.8,21.81,5.46,8.97,83.45,106.63,18.1,8.53],"y55":[9.32,29.51,21.06,8.76,7.03,6.6,6.9,8.35,19.22,94.9,8.76,7.85],"y56":[6.85,6.11,7.48,10.38,31.66,10.2,13.36,15.7,7.14,71.65,28.49,7.32],"y57":[6.2,6.27,7.67,8.22,6.99,27.4,7.16,6.15,6.98,6.29,8.13,6.98],"y58":[7.09,7.42,8.65,10.73,8.39,8.13,10.14,11.31,27.18,53.71,13.68,15.99],"y59":[17.46,14.48,17.29,20.99,17.25,13.04,11.38,12.76,12.32,11.62,15.26,17.29],"y60":[18.22,18.79,26.13,18.71,20.53,2.06,1.25,6.91,0.12,9.57,11.46,15.29],"y61":[17.06,17.2,21.08,24.8,26.82,37.64,40.12,28.18,14.03,27.62,16.81,18.81],"y62":[24.62,17.76,17.81,21.93,22.0,22.73,18.23,17.34,15.32,6.04,4.69,10.18],"y63":[15.52,21.3,26.25,30.55,5.37,0.05,0.0,0.0,0.0,0.0,1.06,1.23],"y64":[9.03,11.06,14.39,10.91,6.9,1.28,1.81,0.42,8.95,47.35,3.05,5.43],"y65":[18.1,11.77,15.72,17.19,16.83,22.85,27.23,60.04,56.22,29.22,7.03,7.08],"y66":[12.17,9.44,14.89,13.28,10.03,12.5,11.9,11.8,9.36,17.02,14.9,18.16],"y67":[19.37,20.72,25.29,24.06,18.03,12.01,9.83,51.26,10.08,20.62,18.57,18.59],"y68":[28.73,27.29,26.43,16.52,10.38,6.74,4.34,4.5,2.64,17.12,8.48,6.01],"y69":[18.08,16.36,19.83,22.19,20.53,12.43,null,null,null,null,null,null]}},"level_end":{"DK":{"y40":[66.8,62.02,55.62,53.46,46.02,39.94,34.44,28.04,32.46,60.94,74.4,71.4],"y41":[66.3,60.58,53.62,49.7,42.8,37.14,42.6,53.38,67.6,74.0,72.8,67.3],"y42":[61.78,55.06,50.58,50.5,64.3,55.86,43.42,36.32,48.58,76.5,75.1,73.22],"y43":[72.94,69.6,69.1,69.1,56.74,67.8,54.58,48.82,51.14,74.0,71.82,69.6],"y44":[67.3,63.4,70.5,72.24,65.7,53.22,51.62,50.5,50.42,76.2,72.8,72.1],"y45":[64.7,58.66,53.7,50.1,54.58,55.7,49.46,47.22,51.54,70.0,72.8,71.68],"y46":[64.7,60.34,60.22,57.34,57.46,64.5,53.3,54.5,58.18,72.24,70.0,63.5],"y47":[57.34,52.58,46.74,40.18,41.9,55.86,54.74,50.74,54.98,68.1,56.18,45.7],"y48":[39.14,31.92,25.02,20.42,15.56,9.58,7.38,6.7,23.58,43.66,61.06,63.7],"y49":[56.74,54.26,48.66,50.82,61.9,67.3,61.78,56.74,67.0,70.6,69.9,65.3],"y50":[58.18,51.7,43.9,40.9,49.94,57.82,62.26,59.14,60.22,64.7,58.06,50.58],"y51":[41.1,33.64,26.64,25.86,29.8,36.32,49.78,54.18,67.9,78.8,73.6,68.4],"y52":[61.06,54.34,53.54,56.98,68.3,49.7,50.26,49.14,56.18,74.4,71.54,61.9],"y53":[54.82,52.74,46.1,40.8,41.9,45.14,51.38,54.34,65.7131,73.177,68.6812,58.8439],"y54":[47.7234,41.6308,38.4415,47.6386,51.5559,57.3933,49.1803,56.4392,69.6525,73.5138,71.9519,60.914],"y55":[47.6386,44.006,37.7056,35.1307,41.4753,37.7056,31.2285,23.5997,31.9445,63.9508,74.5307,71.29],"y56":[63.336,55.2144,46.9642,42.7291,43.3647,43.6045,39.7889,38.664,42.0993,77.4089,75.3287,68.4664],"y57":[59.0391,50.5789,39.1116,31.0347,31.1638,27.5492,20.4749,29.3852,39.1865,55.4017,60.2189,49.3537],"y58":[36.8343,25.4411,20.1291,18.878,24.7053,30.9702,28.336,23.6542,47.385,75.4433,73.065,65.1917],"y59":[52.0941,37.4137,28.7652,21.331,13.7967,11.433,17.2288,20.4252,31.0347,56.915,72.8414,67.5054],"y60":[67.1869,59.2347,49.6145,48.4909,56.8196,59.7255,62.9282,53.5475,71.4,76.9431,73.8516,70.4137],"y61":[68.1452,62.7249,50.7556,54.9343,52.3646,49.0073,48.4787,44.7344,62.0167,78.7,79.0547,76.711],"y62":[65.0877,54.8411,41.553,30.7133,26.5995,29.9501,26.2486,22.3152,24.4816,35.2706,36.4751,34.3671],"y63":[30.14,22.21,14.576,11.703,15.635,23.22,40.934,50.579,65.609,70.414,74.191,70.196],"y64":[63.745,55.683,45.882,43.285,49.527,45.47,43.765,44.653,81.086,74.417,73.626,70.632],"y65":[66.658,69.004,72.618,70.196,67.187,56.155,54.934,57.489,69.869,80.245,79.887,75.214],"y66":[71.18,65.609,56.629,48.921,39.261,29.385,38.59,37.341,41.475,50.315,58.552,55.402],"y67":[47.893,37.925,32.076,26.132,35.905,37.123,41.398,51.467,53.155,80.006,79.768,71.4],"y68":[59.923,49.007,38.22,37.999,52.817,56.344,58.844,57.202,70.414,80.006,80.006,73.965],"y69":[65.296,60.021,54.192,44.979,48.491,48.577,null,null,null,null,null,null]},"KY":{"y49":[36.2242,34.3505,33.2378,34.3505,40.3668,35.2791,35.4876,36.3302,42.0651,40.0564,39.4958,36.2242],"y50":[31.5659,28.4819,26.2839,25.1039,35.0713,41.1672,41.1672,36.6496,36.1183,35.8021,32.4439,28.5722],"y51":[23.3218,19.8011,16.7174,16.8443,22.5404,29.5789,35.4876,27.6771,40.0263,41.5241,40.0742,38.8264],"y52":[34.6582,28.6638,29.9508,28.9356,30.7988,29.5789,23.8794,22.54,41.8848,40.6336,40.0885,34.3505],"y53":[32.3455,30.42,28.2119,27.0617,24.3643,23.4009,28.2119,34.452,40.2051,40.3103,35.9116,31.8477],"y54":[25.659,21.8933,19.0265,27.4905,29.1882,25.7452,23.1245,41.6858,41.7922,40.5209,39.8968,34.141],"y55":[32.8892,25.4871,20.9398,18.4417,23.2074,20.9398,26.4382,29.1882,40.8375,37.2174,40.5209,38.8555],"y56":[36.4111,32.5086,30.1887,27.4905,20.7033,27.6674,23.9586,25.1444,33.368,40.6264,39.2705,36.7125],"y57":[32.7939,30.1887,24.4643,16.4997,13.7209,13.0433,13.0433,21.4988,31.1934,36.914,30.27,23.8747],"y58":[18.4417,13.3789,11.6625,9.9481,8.0911,7.5971,5.4361,9.6414,32.2246,42.1121,41.0491,31.2864],"y59":[28.4687,25.3155,24.7185,27.8447,21.9747,26.1775,29.8234,25.3155,33.9469,38.9591,35.1193,27.138],"y60":[25.573,24.3797,22.4649,23.9586,34.7264,29.9146,28.2899,34.8244,35.8121,39.8968,35.4154,34.3356],"y61":[32.8892,30.915,30.1887,27.138,30.73,29.9146,21.9747,24.211,32.9847,39.2705,37.2174,38.0322],"y62":[34.2382,29.4598,27.8447,28.9176,27.226,30.6377,19.4738,16.9021,23.4569,20.1589,13.7209,10.6345],"y63":[8.13,6.326,3.657,3.963,5.934,19.324,34.141,35.514,41.261,46.124,49.129,41.473],"y64":[26.612,15.027,10.588,10.828,25.831,28.201,28.379,34.824,42.219,51.1,50.128,40.416],"y65":[35.317,33.753,31.38,26.438,28.918,32.13,33.753,30.006,53.006,40.521,43.94,40.943],"y66":[30.27,25.23,19.324,14.305,12.606,19.101,29.279,24.549,27.314,29.46,30.915,28.648],"y67":[22.383,20.005,20.94,19.549,26.525,24.464,27.845,32.985,34.044,36.712,32.604,28.379],"y68":[24.464,22.876,22.138,16.17,17.381,18.806,22.219,24.974,29.823,30.006,32.604,25.573],"y69":[21.58,22.383,21.098,20.159,21.731,23.374,null,null,null,null,null,null]},"NPL":{"y37":[70.7,67.6,61.7,56.6,54.1,59.8,84.8,90.8,118.7713,154.3326,154.5517,149.9503],"y38":[139.6438,133.6459,119.3146,101.7597,85.1133,68.9556,61.1146,71.7946,125.8486,169.0047,162.4398,158.2766],"y39":[153.8943,148.6356,136.6443,120.7634,106.9998,117.8658,126.0485,114.4249,117.8658,146.4444,158.0575,159.1531],"y40":[150.3885,139.2439,120.7634,114.4249,118.9524,101.7597,89.7129,77.2237,91.3631,136.045,149.9503,144.6915],"y41":[137.0447,131.6466,118.4091,107.7242,104.6455,98.1291,104.6455,116.7792,137.8444,164.7091,164.2318,161.1251],"y42":[158.7149,151.2649,138.8441,130.0471,136.045,130.6469,137.0447,117.1414,137.2446,168.766,165.6637,159.8104],"y43":[143.5959,131.6466,130.2471,122.2499,113.7005,116.0548,103.4099,103.9211,109.5352,141.0433,150.1694,140.8433],"y44":[132.0464,118.9524,112.795,105.0077,118.9524,118.7713,108.2675,105.9132,105.7321,159.3722,164.2318,155.209],"y45":[144.9106,132.8461,121.3067,114.4249,124.849,125.2488,119.4957,116.0548,116.9603,137.6445,151.2649,154.3326],"y46":[141.6438,131.8465,127.0482,122.0499,116.2359,119.3146,132.8461,116.9603,129.2474,165.1864,159.1531,142.0621],"y47":[131.2467,122.8496,107.7242,95.6538,90.538,99.2843,92.1882,87.7326,100.7695,110.6218,107.1809,94.6636],"y48":[77.8306,61.9258,46.4225,36.6157,27.6099,21.1247,14.7104,10.0509,41.1013,72.5202,96.974,103.0799],"y49":[98.2942,95.6538,92.6833,102.7498,119.8579,145.568,145.568,139.044,153.237,163.5354,161.3442,149.7311],"y50":[141.0433,127.8479,116.5981,111.8895,134.4456,145.568,138.4442,136.4449,144.2533,153.6752,143.1577,129.2474],"y51":[114.2438,101.5947,87.4025,80.1064,81.9271,88.2276,103.4099,110.4407,138.8441,168.766,162.4398,149.0738],"y52":[134.2457,120.7634,112.795,115.1493,132.4463,125.0489,122.4498,118.9524,136.245,168.0501,163.7545,157.4006],"y53":[147.7591,135.6452,116.9603,102.9149,98.4592,108.2675,128.0478,145.3488,159.1531,165.9023,163.0972,152.1414],"y54":[137.2446,120.7634,109.5352,126.4484,126.4484,127.648,122.0499,148.1973,170.1979,167.0955,159.8104,145.7871],"y55":[136.8448,120.7634,103.74,88.8877,94.0035,81.0168,72.9754,69.4964,108.6297,159.5913,165.6636,158.4957],"y56":[144.4724,132.0464,116.7792,100.6045,84.203,93.0134,102.4198,111.7084,138.8441,168.5274,168.0501,158.2766],"y57":[140.8433,125.6487,107.9053,99.9444,86.7823,76.9202,63.2777,63.2777,79.4995,115.3304,152.7988,149.7311],"y58":[135.2453,123.8493,102.7498,89.7129,81.0168,73.8857,60.3035,61.6554,108.0864,159.1531,156.9619,160.0295],"y59":[155.6472,144.6915,119.4957,91.0331,69.4964,51.5048,56.8145,48.2727,58.9516,95.1587,107.7242,107.5431],"y60":[110.984,102.5848,92.3533,97.304,126.8482,131.8465,126.4484,125.4487,140.4435,160.0295,160.2487,144.0342],"y61":[132.2464,125.0489,128.6476,144.0342,135.0454,117.8658,112.2517,104.8266,132.4463,167.8115,163.3163,150.6076],"y62":[136.6448,125.0489,107.362,95.1587,86.4789,91.6932,93.8385,87.0858,93.6735,97.6341,83.5961,57.5071],"y63":[38.0,29.73,23.87,25.07,35.43,70.71,113.16,128.85,156.09,177.36,173.3,158.28],"y64":[139.84,127.25,118.77,126.85,144.69,126.0,120.58,122.05,169.0,190.74,181.0,165.0],"y65":[150.0,141.0,128.0,118.0,123.0,121.0,129.0,136.0,153.0,182.0,184.0,171.15],"y66":[149.95,126.05,104.28,89.38,85.72,75.71,96.0,98.62,106.64,149.51,162.22,156.96],"y67":[142.94,126.45,112.25,88.72,90.7,81.32,85.27,109.72,122.25,153.46,164.47,155.21],"y68":[143.16,133.85,124.85,115.15,118.77,110.44,104.28,92.35,123.85,161.34,167.33,148.64],"y69":[127.65,114.06,96.97,75.86,78.89,78.44,null,null,null,null,null,null]},"THREE":{"y49":[191.2584,184.2643,174.5811,187.9203,222.1247,248.1471,242.8356,232.1142,262.3021,274.1918,270.74,251.2553],"y50":[230.7892,208.0298,186.782,177.8934,219.4569,244.5552,241.8714,232.2345,240.5916,254.1773,233.6616,208.3996],"y51":[178.6656,155.0358,130.7599,122.8107,134.2675,154.1265,188.6775,192.2978,246.7704,289.0901,276.114,256.3002],"y52":[229.9639,203.7672,196.2858,201.0649,231.5451,204.3278,196.5892,190.6324,234.3098,283.0837,275.383,253.6511],"y53":[234.9246,218.8052,191.2722,170.7766,164.7235,176.8084,207.6397,234.1408,265.0713,279.3896,267.69,242.833],"y54":[210.627,184.2875,167.0032,201.5775,207.1925,210.7865,194.3547,246.3223,281.6426,281.1302,271.6591,240.8421],"y55":[217.3726,190.2565,162.3854,142.4601,158.6862,139.6622,130.6421,122.2843,181.4117,260.7595,280.7152,268.6412],"y56":[244.2195,219.7694,193.9321,170.8241,148.271,164.2853,166.1673,175.5168,214.3114,286.5627,282.6493,263.4555],"y57":[232.6763,206.4163,171.4812,147.4788,131.667,117.5127,96.7959,114.1617,149.8794,207.6461,243.2877,222.9595],"y58":[190.5213,162.6693,134.5414,118.539,113.8132,112.453,94.0756,94.951,187.696,276.7085,271.076,256.5076],"y59":[236.21,207.4207,172.9794,140.2088,105.2678,89.1153,103.8667,94.0134,123.9332,191.0328,215.6849,202.1865],"y60":[203.7439,186.1992,164.4327,169.7535,218.3942,221.4866,217.6665,213.8206,247.6556,276.8694,269.5157,248.7835],"y61":[233.2808,218.6888,209.5919,226.1065,218.14,196.7877,182.7051,173.772,227.4477,285.782,279.5884,265.3508],"y62":[235.9707,209.3498,176.7597,154.7896,140.3044,152.281,139.5609,126.3031,141.612,153.0636,133.7921,102.5087],"y63":[76.27,58.266,42.103,40.736,56.999,113.254,188.235,214.943,262.96,293.898,296.62,269.949],"y64":[230.197,197.96,175.24,180.963,220.048,199.671,192.724,201.527,292.305,316.257,304.754,276.048],"y65":[251.975,243.757,231.998,214.634,219.105,209.285,217.687,223.495,275.875,302.766,307.827,287.307],"y66":[251.4,216.889,180.233,152.606,137.587,124.196,163.869,160.51,175.429,229.285,251.687,241.01],"y67":[213.216,184.38,165.266,134.401,153.13,142.907,154.513,194.172,209.449,270.178,276.842,254.989],"y68":[227.547,205.733,185.208,169.319,188.968,185.59,185.343,174.526,224.087,271.352,279.94,248.178],"y69":[214.526,196.464,172.26,140.998,149.112,150.391,null,null,null,null,null,null]},"PS":{"y48":[null,null,null,null,null,null,null,null,137.64,178.9,203.51,203.85],"y49":[195.0,193.6,188.35,186.25,207.92,182.4,157.76,156.64,220.23,248.0,234.68,227.12],"y50":[221.0,213.44,202.48,198.74,196.7,198.06,222.08,198.4,201.8,229.28,217.04,205.88],"y51":[191.5,181.7,170.5,167.35,204.18,194.65,192.2,195.0,224.96,235.4,233.96,220.64],"y52":[206.9,196.02,186.6,182.75,159.16,120.44,145.12,157.2,236.12,255.48,239.72,223.52],"y53":[211.66,201.12,186.95,175.05,173.3,157.48,144.79,205.2,212.36,255.04,241.52,230.72],"y54":[218.3,209.28,202.14,203.5,145.78,128.28,138.96,216.32,269.12,257.24,241.52,222.8],"y55":[211.66,162.8,132.2,114.56,112.88,109.52,126.88,125.48,276.63,252.4,240.8,223.88],"y56":[210.64,199.76,185.9,171.2,127.16,131.08,135.0,132.48,171.9,258.12,245.48,231.8],"y57":[215.6,202.48,186.95,171.9,160.35,138.52,140.5,153.0,214.16,251.52,250.64,236.48],"y58":[222.0,207.0,190.0,175.0,157.0,152.0,144.0,166.0,259.0,282.0,268.0,247.0],"y59":[227.0,207.0,182.0,154.0,135.0,127.0,139.0,151.0,177.0,237.0,226.0,201.0],"y60":[178.0,154.0,124.0,101.0,107.0,131.0,157.0,176.0,206.9,295.5,279.41,259.73],"y61":[240.41,220.27,203.31,209.96,217.92,208.6,184.08,190.1,271.02,283.56,260.3,233.74],"y62":[202.1,178.11,159.12,135.02,123.15,121.41,117.8,127.28,141.38,146.77,137.09,122.26],"y63":[103.0,79.1,60.07,27.15,22.75,35.86,58.6,108.58,169.03,233.16,232.43,228.45],"y64":[214.71,199.34,180.28,168.06,183.23,183.48,197.94,222.52,280.2,290.4,289.22,277.81],"y65":[254.77,239.47,220.92,201.42,199.11,193.28,209.96,215.6,261.64,274.77,280.2,268.68],"y66":[251.22,238.95,218.34,204.13,196.36,188.0,187.0,174.0,228.2,284.54,270.32,246.0],"y67":[220.64,196.02,167.0,138.74,175.75,184.5,223.16,221.0,262.96,287.85,266.48,242.24],"y68":[208.94,178.9,150.2,135.0,141.38,143.8,172.95,203.16,264.28,289.89,287.34,271.53],"y69":[245.12,221.36,195.0,167.7,161.75,148.8,null,null,null,null,null,null]}}};</script>
 </body>
 </html>
