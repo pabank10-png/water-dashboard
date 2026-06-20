@@ -102,31 +102,37 @@ def read_api_monthly(csv_path):
 
 
 # ── 3. Merge API เข้า master ──
-def _recent_thai_months(n=2):
-    """คืน set ของ (thai_year, month) สำหรับ n เดือนล่าสุด (เดือนนี้ + เดือนก่อนหน้า)"""
-    from datetime import date
-    today = date.today()
-    recent = set()
-    y, m = today.year, today.month
-    for _ in range(n):
-        recent.add((y + 543, m))
-        m -= 1
-        if m == 0:
-            m = 12
-            y -= 1
-    return recent
+def _overwrite_months(lookback_days=5):
+    """
+    คืน set ของ (thai_year, month) ที่ควร overwrite
+    = เดือนที่มีวันอยู่ใน lookback window (today - lookback_days)
+    ตัวอย่าง: วันที่ 20 มิ.ย.  → window = 15–20 มิ.ย.  → {(2569, 6)}
+              วันที่  3 ก.ค.  → window = 28 มิ.ย.–3 ก.ค. → {(2569, 6), (2569, 7)}
+    """
+    import calendar
+    from datetime import date, timedelta
+    today        = date.today()
+    window_start = today - timedelta(days=lookback_days)
+    months = set()
+    d = window_start
+    while d <= today:
+        months.add((d.year + 543, d.month))
+        # เลื่อนไปวันแรกของเดือนถัดไปเพื่อ loop เร็ว
+        last = calendar.monthrange(d.year, d.month)[1]
+        d = date(d.year, d.month, last) + timedelta(days=1)
+    return months
 
 def merge_api(df_master, df_api):
     """
     กฎ:
-      • เดือนปัจจุบัน + เดือนก่อนหน้า → overwrite ด้วย API (API อาจ update ช้า)
-      • เดือนที่จบแล้ว (มีข้อมูลครบ) → เติมเฉพาะช่องที่ยัง NaN เท่านั้น
-      • เดือนใหม่ที่ยังไม่มีใน master → เพิ่มแถวใหม่
+      • เดือนที่มีวันอยู่ใน LOOKBACK_DAYS → overwrite (ข้อมูล API อาจ update ช้า)
+      • เดือนอื่นทั้งหมด → เพิ่มเฉพาะ row ใหม่ที่ยังไม่มี (ไม่แตะข้อมูลที่มีอยู่)
+      • เดือนใหม่ที่ยังไม่มีใน master → เพิ่ม row ใหม่
     """
     if df_api.empty:
         return df_master
 
-    recent = _recent_thai_months(2)
+    overwrite = _overwrite_months(lookback_days=5)   # set ของ (thai_year, month)
 
     master_idx = {(r, y, m): i
                   for i, (r, y, m) in enumerate(
@@ -140,7 +146,7 @@ def merge_api(df_master, df_api):
         year  = int(api_row["year"])
         month = int(api_row["month"])
         key   = (res, year, month)
-        is_recent = (year, month) in recent
+        is_recent = (year, month) in overwrite
 
         if key in master_idx:
             idx = master_idx[key]
