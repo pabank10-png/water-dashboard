@@ -386,7 +386,6 @@ body.dark .yl-actual{background:#f0f0f0}
     <div>
       <div class="topbar-left" style="gap:8px">
         <h1>Water Reservoir Dashboard</h1>
-        <span class="hpill">2026</span>
       </div>
       <div class="sub">RY Watershed · Water Level Forecast & Scenario Planning</div>
     </div>
@@ -394,8 +393,16 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="topbar-right">
     <button class="hpill" id="night-btn" onclick="toggleNight()" style="cursor:pointer" title="สลับ Night Mode"><i class="ti ti-moon" aria-hidden="true"></i></button>
     <span class="hpill green"><span class="pulse"></span>Live</span>
-    <span class="hpill"><i class="ti ti-calendar-event" style="font-size:13px" aria-hidden="true"></i>8 มิ.ย. 2569</span>
-    <span class="hpill"><i class="ti ti-chart-line" style="font-size:13px" aria-hidden="true"></i>Jan–Dec 2026</span>
+    <span class="hpill" id="hpill-date"><i class="ti ti-calendar-event" style="font-size:13px" aria-hidden="true"></i></span>
+    <script>
+      (function(){
+        const MO_TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+        const d=new Date(), thY=d.getFullYear()+543;
+        document.getElementById('hpill-date').innerHTML=
+          '<i class="ti ti-calendar-event" style="font-size:13px" aria-hidden="true"></i>'+
+          d.getDate()+' '+MO_TH[d.getMonth()]+' '+thY;
+      })();
+    </script>
   </div>
 </div>
 
