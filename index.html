@@ -309,6 +309,8 @@ body.dark .yl-actual{background:#f0f0f0}
 .sc-mtplbl{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase}
 .sc-mtp-range{width:120px;accent-color:var(--accent)}
 .sc-rv2{font-size:13px;font-weight:800;min-width:42px}
+.sc-num-inp{width:58px;border:1.5px solid currentColor;border-radius:5px;background:transparent;padding:2px 4px;text-align:center;font-size:13px;font-weight:800;font-family:var(--font-num);-moz-appearance:textfield}
+.sc-num-inp::-webkit-inner-spin-button,.sc-num-inp::-webkit-outer-spin-button{-webkit-appearance:none}
 .sc-rm{border:1px solid var(--border2);background:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--text3);margin-left:auto;line-height:1.8}
 .sc-rm:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .sc-months{display:grid;grid-template-columns:repeat(12,1fr);gap:5px}
@@ -979,13 +981,15 @@ function renderScList(tank){
         <span class="sc-lbl2" style="color:${s.color}">${s.label}</span>
         <span class="sc-mtplbl">${_simYears[tank]===2?'ตัวคูณ ปี 1:':'ตัวคูณ Inflow:'}</span>
         <input type="range" class="sc-mtp-range" min="0.5" max="2.0" step="0.05" value="${s.mult}"
-          oninput="multiSc['${tank}'].find(x=>x.id===${s.id}).mult=parseFloat(this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'×';if('${tank}'==='dk')updDK();else updPS()">
-        <span class="sc-rv2" style="color:${s.color}">${s.mult.toFixed(2)}×</span>
+          oninput="(function(r){const v=parseFloat(r.value);multiSc['${tank}'].find(x=>x.id===${s.id}).mult=v;r.nextElementSibling.value=v.toFixed(2);if('${tank}'==='dk')updDK();else updPS();})(this)">
+        <input type="number" class="sc-rv2 sc-num-inp" min="0.1" max="9.99" step="0.05" value="${s.mult.toFixed(2)}" style="color:${s.color}"
+          onchange="(function(n){const v=Math.max(0.1,parseFloat(n.value)||1);n.value=v.toFixed(2);n.previousElementSibling.value=Math.min(2,Math.max(0.5,v));multiSc['${tank}'].find(x=>x.id===${s.id}).mult=v;if('${tank}'==='dk')updDK();else updPS();})(this)">
         ${_simYears[tank]===2?`
         <span class="sc-mtplbl" style="margin-left:10px">ปี 2:</span>
         <input type="range" class="sc-mtp-range" min="0.5" max="2.0" step="0.05" value="${(s.mult2??1.0).toFixed(2)}"
-          oninput="multiSc['${tank}'].find(x=>x.id===${s.id}).mult2=parseFloat(this.value);this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)+'×';if('${tank}'==='dk')updDK();else updPS()">
-        <span class="sc-rv2" style="color:${s.color}">${(s.mult2??1.0).toFixed(2)}×</span>`:''}
+          oninput="(function(r){const v=parseFloat(r.value);multiSc['${tank}'].find(x=>x.id===${s.id}).mult2=v;r.nextElementSibling.value=v.toFixed(2);if('${tank}'==='dk')updDK();else updPS();})(this)">
+        <input type="number" class="sc-rv2 sc-num-inp" min="0.1" max="9.99" step="0.05" value="${(s.mult2??1.0).toFixed(2)}" style="color:${s.color}"
+          onchange="(function(n){const v=Math.max(0.1,parseFloat(n.value)||1);n.value=v.toFixed(2);n.previousElementSibling.value=Math.min(2,Math.max(0.5,v));multiSc['${tank}'].find(x=>x.id===${s.id}).mult2=v;if('${tank}'==='dk')updDK();else updPS();})(this)">`:''}
         ${multiSc[tank].length>1?`<button class="sc-rm" onclick="rmSc('${tank}',${s.id})">✕</button>`:''}
       </div>
       <div class="sc-months">
