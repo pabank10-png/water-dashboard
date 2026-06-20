@@ -16,7 +16,7 @@ import requests
 # ── ตั้งค่า ──
 _DIR          = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_CSV    = os.path.join(_DIR, "api_historical_raw.csv")
-FETCH_START   = date(2020, 1, 1)    # เริ่มต้นปี 2563 เพื่อให้ได้ข้อมูล PS ด้วย
+FETCH_START   = date(2005, 9, 1)    # ประแสร์มีข้อมูลตั้งแต่ 1 ก.ย. 2548
 DELAY_SEC     = 0.15                # delay ระหว่างแต่ละวัน
 LOOKBACK_DAYS = 5                   # ย้อนหลัง 5 วันเสมอ (API อาจอัปเดตช้า)
 
