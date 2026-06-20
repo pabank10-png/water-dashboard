@@ -102,16 +102,18 @@ def read_api_monthly(csv_path):
 
 
 # ── 3. Merge API เข้า master ──
+API_START_YEAR = 2563  # ปีแรกที่ API ให้ข้อมูล → overwrite เสมอ
+
 def merge_api(df_master, df_api):
     """
     กฎ:
-      • เดือนที่มีอยู่ใน master แล้ว → เติมเฉพาะช่องที่ยัง NaN
+      • ปี >= 2563 (API era) → overwrite ด้วย API เสมอ (รองรับ late-update / backfill 5 วัน)
+      • ปี < 2563 (ก่อน API)  → เติมเฉพาะช่องที่ยัง NaN (ไม่ทับ historical)
       • เดือนใหม่ที่ยังไม่มีใน master → เพิ่มแถวใหม่
     """
     if df_api.empty:
         return df_master
 
-    # index master เพื่อ lookup เร็ว
     master_idx = {(r, y, m): i
                   for i, (r, y, m) in enumerate(
                       zip(df_master["reservoir"], df_master["year"], df_master["month"]))}
@@ -120,20 +122,25 @@ def merge_api(df_master, df_api):
     updated = 0
 
     for _, api_row in df_api.iterrows():
-        key = (api_row["reservoir"], int(api_row["year"]), int(api_row["month"]))
+        res   = api_row["reservoir"]
+        year  = int(api_row["year"])
+        month = int(api_row["month"])
+        key   = (res, year, month)
+        is_api_era = year >= API_START_YEAR
+
         if key in master_idx:
             idx = master_idx[key]
             for col in ["inflow", "outflow", "level_end"]:
-                if pd.isna(df_master.at[idx, col]) and pd.notna(api_row[col]):
-                    df_master.at[idx, col] = round(float(api_row[col]), 4)
-                    updated += 1
+                new_val = api_row[col]
+                if pd.notna(new_val):
+                    if is_api_era or pd.isna(df_master.at[idx, col]):
+                        df_master.at[idx, col] = round(float(new_val), 4)
+                        updated += 1
         else:
             new_rows.append({
-                "reservoir": api_row["reservoir"],
-                "year":      int(api_row["year"]),
-                "month":     int(api_row["month"]),
-                "inflow":    api_row["inflow"]  if pd.notna(api_row["inflow"])  else None,
-                "outflow":   api_row["outflow"] if pd.notna(api_row["outflow"]) else None,
+                "reservoir": res, "year": year, "month": month,
+                "inflow":    api_row["inflow"]    if pd.notna(api_row["inflow"])    else None,
+                "outflow":   api_row["outflow"]   if pd.notna(api_row["outflow"])   else None,
                 "level_end": api_row["level_end"] if pd.notna(api_row["level_end"]) else None,
             })
 
@@ -141,7 +148,7 @@ def merge_api(df_master, df_api):
         df_master = pd.concat([df_master, pd.DataFrame(new_rows)], ignore_index=True)
 
     df_master = df_master.sort_values(["reservoir","year","month"]).reset_index(drop=True)
-    print(f"✓ merge: อัปเดต {updated} ช่อง  เพิ่ม {len(new_rows)} เดือนใหม่")
+    print(f"✓ merge: อัปเดต {updated} ค่า  เพิ่ม {len(new_rows)} เดือนใหม่")
     return df_master
 
 
