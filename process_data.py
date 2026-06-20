@@ -102,17 +102,31 @@ def read_api_monthly(csv_path):
 
 
 # ── 3. Merge API เข้า master ──
-API_START_YEAR = 2563  # ปีแรกที่ API ให้ข้อมูล → overwrite เสมอ
+def _recent_thai_months(n=2):
+    """คืน set ของ (thai_year, month) สำหรับ n เดือนล่าสุด (เดือนนี้ + เดือนก่อนหน้า)"""
+    from datetime import date
+    today = date.today()
+    recent = set()
+    y, m = today.year, today.month
+    for _ in range(n):
+        recent.add((y + 543, m))
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    return recent
 
 def merge_api(df_master, df_api):
     """
     กฎ:
-      • ปี >= 2563 (API era) → overwrite ด้วย API เสมอ (รองรับ late-update / backfill 5 วัน)
-      • ปี < 2563 (ก่อน API)  → เติมเฉพาะช่องที่ยัง NaN (ไม่ทับ historical)
+      • เดือนปัจจุบัน + เดือนก่อนหน้า → overwrite ด้วย API (API อาจ update ช้า)
+      • เดือนที่จบแล้ว (มีข้อมูลครบ) → เติมเฉพาะช่องที่ยัง NaN เท่านั้น
       • เดือนใหม่ที่ยังไม่มีใน master → เพิ่มแถวใหม่
     """
     if df_api.empty:
         return df_master
+
+    recent = _recent_thai_months(2)
 
     master_idx = {(r, y, m): i
                   for i, (r, y, m) in enumerate(
@@ -126,14 +140,14 @@ def merge_api(df_master, df_api):
         year  = int(api_row["year"])
         month = int(api_row["month"])
         key   = (res, year, month)
-        is_api_era = year >= API_START_YEAR
+        is_recent = (year, month) in recent
 
         if key in master_idx:
             idx = master_idx[key]
             for col in ["inflow", "outflow", "level_end"]:
                 new_val = api_row[col]
                 if pd.notna(new_val):
-                    if is_api_era or pd.isna(df_master.at[idx, col]):
+                    if is_recent or pd.isna(df_master.at[idx, col]):
                         df_master.at[idx, col] = round(float(new_val), 4)
                         updated += 1
         else:
