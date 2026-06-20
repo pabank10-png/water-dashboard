@@ -536,19 +536,20 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">3อ่าง monthly inflow — DK+KY+NPL (MCM)</span></span>
-      <div class="yr-toggle" id="inf-mode-dk-btns">
-        <button class="yr-btn active" onclick="setInfMode('dk','all')">ทุกปี</button>
-        <button class="yr-btn" onclick="setInfMode('dk','sc')">เลือก Scenario</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px">
+          <label for="inf-yr-dk" style="font-size:11px;color:var(--text3)">แสดง:</label>
+          <select id="inf-yr-dk" class="inf-sel" onchange="onYrChangeDK()">
+            <option value="all" selected>ทุกปี</option>
+            <option value="avg">เฉลี่ย 10 ปี</option>
+            <option value="avg5">เฉลี่ย 5 ปี</option>
+          </select>
+        </div>
+        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
+        <div class="sc-sel-row" id="inf-scrow-dk"></div>
       </div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-3tk" role="img" aria-label="3-reservoir combined inflow">3-tank inflow</canvas></div>
-    <div id="inf-sc-mgr-dk" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
-      <div class="sc-mgr-head" style="margin-bottom:8px">
-        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
-        <button id="inf-sc-add-dk" class="add-sc-btn" onclick="addInflowSc('dk')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
-      </div>
-      <div id="inf-sc-list-dk"></div>
-    </div>
   </div>
   <div class="grid-3">
     <div class="card">
@@ -569,19 +570,20 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">ประแสร์ (PS) monthly inflow (MCM)</span></span>
-      <div class="yr-toggle" id="inf-mode-ps-btns">
-        <button class="yr-btn active" onclick="setInfMode('ps','all')">ทุกปี</button>
-        <button class="yr-btn" onclick="setInfMode('ps','sc')">เลือก Scenario</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:5px">
+          <label for="inf-yr-ps" style="font-size:11px;color:var(--text3)">แสดง:</label>
+          <select id="inf-yr-ps" class="inf-sel" onchange="onYrChangePS()">
+            <option value="all" selected>ทุกปี</option>
+            <option value="avg">เฉลี่ย 10 ปี</option>
+            <option value="avg5">เฉลี่ย 5 ปี</option>
+          </select>
+        </div>
+        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
+        <div class="sc-sel-row" id="inf-scrow-ps"></div>
       </div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-psi" role="img" aria-label="PS inflow">PS inflow</canvas></div>
-    <div id="inf-sc-mgr-ps" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
-      <div class="sc-mgr-head" style="margin-bottom:8px">
-        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
-        <button id="inf-sc-add-ps" class="add-sc-btn" onclick="addInflowSc('ps')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
-      </div>
-      <div id="inf-sc-list-ps"></div>
-    </div>
   </div>
 
   <!-- Summary table -->
@@ -637,19 +639,20 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">3อ่าง monthly outflow — DK+KY+NPL (MCM)</span></span>
-      <div class="yr-toggle" id="out-mode-dk-btns">
-        <button class="yr-btn active" onclick="setOutMode('dk','all')">ทุกปี</button>
-        <button class="yr-btn" onclick="setOutMode('dk','sc')">เลือก Scenario</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px">
+          <label for="out-yr-dk" style="font-size:11px;color:var(--text3)">แสดง:</label>
+          <select id="out-yr-dk" class="inf-sel" onchange="onYrChangeOutDK()">
+            <option value="all" selected>ทุกปี</option>
+            <option value="avg">เฉลี่ย 10 ปี</option>
+            <option value="avg5">เฉลี่ย 5 ปี</option>
+          </select>
+        </div>
+        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
+        <div class="sc-sel-row" id="out-scrow-dk"></div>
       </div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-3tko" role="img" aria-label="3อ่าง outflow combined">3อ่าง outflow</canvas></div>
-    <div id="out-sc-mgr-dk" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
-      <div class="sc-mgr-head" style="margin-bottom:8px">
-        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
-        <button id="out-sc-add-dk" class="add-sc-btn" onclick="addOutflowSc('dk')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
-      </div>
-      <div id="out-sc-list-dk"></div>
-    </div>
   </div>
   <div class="grid-3">
     <div class="card">
@@ -670,19 +673,20 @@ body.dark .yl-actual{background:#f0f0f0}
   <div class="card">
     <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span><i class="ti ti-chart-line" aria-hidden="true"></i><span class="ctitle">ประแสร์ (PS) monthly outflow (MCM)</span></span>
-      <div class="yr-toggle" id="out-mode-ps-btns">
-        <button class="yr-btn active" onclick="setOutMode('ps','all')">ทุกปี</button>
-        <button class="yr-btn" onclick="setOutMode('ps','sc')">เลือก Scenario</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:5px">
+          <label for="out-yr-ps" style="font-size:11px;color:var(--text3)">แสดง:</label>
+          <select id="out-yr-ps" class="inf-sel" onchange="onYrChangeOutPS()">
+            <option value="all" selected>ทุกปี</option>
+            <option value="avg">เฉลี่ย 10 ปี</option>
+            <option value="avg5">เฉลี่ย 5 ปี</option>
+          </select>
+        </div>
+        <div style="width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></div>
+        <div class="sc-sel-row" id="out-scrow-ps"></div>
       </div>
     </div>
     <div style="position:relative;height:250px"><canvas id="c-pso" role="img" aria-label="PS outflow">PS outflow</canvas></div>
-    <div id="out-sc-mgr-ps" style="display:none;border-top:1px solid var(--border);padding:10px 4px 4px;margin-top:8px">
-      <div class="sc-mgr-head" style="margin-bottom:8px">
-        <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Scenarios — เลือกปีที่จะแสดง (สูงสุด 4)</div>
-        <button id="out-sc-add-ps" class="add-sc-btn" onclick="addOutflowSc('ps')"><i class="ti ti-plus" aria-hidden="true"></i>เพิ่ม Scenario</button>
-      </div>
-      <div id="out-sc-list-ps"></div>
-    </div>
   </div>
 
   <!-- Summary table -->
@@ -722,22 +726,23 @@ const MO=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.�
 const DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
 const DK_MAX=79.411,DK_INIT=73.965,PS_MAX=330,PS_INIT=271.53;
 const DK_OUT=[0.93,0.87,0.93,.90,0.93,0.66,0.93,0.93,.90,0.93,.90,0.93];
-let PS_OUT=[36.54,32.31,36.05,32.16,21.91,16.375,19.80,19.38,16.42,19.05,28.73,29.69];
-let DK_IN={avg:[2.968,2.616,4.242,5.842,12.327,8.544,10.089,8.620,21.270,33.911,15.374,7.014],y55:[15.391,8.808,4.716,7.675,17.075,6.954,7.052,5.727,17.683,35.438,18.060,11.306],y62:[2.489,2.313,1.589,2.582,4.676,9.283,4.282,2.432,6.721,14.871,4.400,1.707]};
-let THREE_IN={avg:[14.034,11.940,16.032,23.653,45.577,34.142,43.091,36.683,75.545,97.769,41.244,18.817],y55:[25.667,16.537,15.723,19.424,49.805,18.025,25.328,28.545,117.735,104.591,52.841,26.836],y62:[12.533,12.954,15.650,19.443,23.871,38.026,18.940,14.744,37.973,43.198,15.704,8.537]};
+const PS_OUT=[36.54,32.31,36.05,32.16,21.91,16.375,19.80,19.38,16.42,19.05,28.73,29.69];
+// DK_IN, THREE_IN, KY_IN, NPL_IN, PS_IN are populated dynamically from data.json in loadData()
+let DK_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
+let THREE_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
 // ══ 3อ่าง COMBINED (DK+KY+NPL) ══
 // KY: MAX=51.1, INIT=25.573, out=[13.64,12.32,13.64,13.2,13.64,13.2,13.64,13.64,13.2,13.64,13.2,13.64]
 // NPL: MAX=187.62, INIT=148.64, out=[22.63,20.44,22.63,21.9,22.63,21.9,22.63,22.63,21.9,22.63,21.9,22.63]
 const THREE_MAX=318.131, THREE_INIT=248.178;
-let THREE_ACT_JUN=152.058; // updated by loadDataJson()
-let PS_ACT_JUN=156.08;
+const THREE_ACT_JUN=152.058; // DK:49.007 + KY:21.731 + NPL:81.32
+const PS_ACT_JUN=156.08; // Actual ประแสร์ ณ วันที่รายงาน
 // Star position: today's fraction through the current report month
-let STAR_MONTH_IDX=5; // updated by loadDataJson() to last month with actual data
+const STAR_MONTH_IDX=5; // มิ.ย. = index 5 in MO[]
 const _dnow=new Date(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
-let THREE_OUT=[37.20,33.63,37.20,36.00,37.20,35.76,37.20,37.20,36.00,37.20,36.00,37.20];
-let KY_IN={avg:[4.363,3.672,3.951,4.369,9.750,8.119,12.507,9.595,16.084,16.742,8.238,5.626],y55:[4.337,3.333,3.168,3.124,8.983,3.812,9.285,14.423,70.031,29.089,16.597,2.796],y62:[3.602,4.627,9.621,10.113,6.386,6.330,4.093,8.149,14.119,9.518,3.647,0.800]};
-let NPL_IN={avg:[6.703,5.652,7.839,13.443,23.500,17.479,20.495,18.468,38.191,47.116,17.633,6.176],y55:[5.939,4.396,7.839,8.625,23.747,7.259,8.992,8.395,30.021,40.064,18.185,12.733],y62:[6.442,6.013,4.439,6.747,12.810,22.412,10.564,4.163,17.133,18.809,7.657,6.030]};
-let PS_IN={avg:[1.127,.950,2.534,6.359,20.518,17.829,27.490,41.332,71.593,56.400,6.583,.693],ssp3_2030:[1.060,.893,2.382,5.978,19.287,16.759,25.841,38.852,67.297,53.016,6.188,.651],ssp3_2050:[.968,.816,2.176,5.461,17.619,15.310,23.606,35.492,61.477,48.431,5.653,.595],ssp5_2030:[1.080,.910,2.426,6.090,19.650,17.075,26.327,39.583,68.564,54.014,6.304,.663],ssp5_2050:[1.071,.902,2.407,6.041,19.490,16.936,26.113,39.261,68.006,53.574,6.253,.658],y62:[0,0,5.600,3.560,15.540,27.320,18.560,31.900,33.310,15.860,.300,0]};
+const THREE_OUT=[37.20,33.63,37.20,36.00,37.20,35.76,37.20,37.20,36.00,37.20,36.00,37.20];
+let KY_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
+let NPL_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
+let PS_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
 
 // ══ CRITERIA (Hard Red / Red / Yellow thresholds per month) ══
 // DK 3อ่าง
@@ -931,12 +936,13 @@ function simPS(sc,mult,extra=0){
 
 // ══ MULTI-SCENARIO STATE ══
 const SC_PAL=['#3b5bdb','#2f9e44','#e03131','#7048e8'];
-let DK_SRCS=[{v:'avg',l:'เฉลี่ย'},{v:'y55',l:'ปี 2555'},{v:'y62',l:'ปี 2562'}];
-let PS_SRCS=[{v:'ssp3_2030',l:'SSP3@2030'},{v:'ssp3_2050',l:'SSP3@2050'},{v:'ssp5_2030',l:'SSP5@2030'},{v:'ssp5_2050',l:'SSP5@2050'},{v:'y62',l:'ปี 2562'}];
+// DK_SRCS, PS_SRCS populated dynamically in loadData()
+let DK_SRCS=[{v:'avg',l:'เฉลี่ย'}];
+let PS_SRCS=[{v:'avg',l:'เฉลี่ย'}];
 const scNext={dk:1,ps:1};
-let multiSc={
+const multiSc={
   dk:[{id:0,label:'Scenario 1',color:'#3b5bdb',mult:1.0,mult2:1.0,srcs:Array(12).fill('avg'),outflow:THREE_OUT.map((v,i)=>+(v/DAYS[i]).toFixed(3)),extra:Array(12).fill(0)}],
-  ps:[{id:0,label:'Scenario 1',color:'#0c8599',mult:1.0,mult2:1.0,srcs:Array(12).fill('ssp3_2030'),outflow:PS_OUT.map((v,i)=>+(v/DAYS[i]).toFixed(3)),extra:Array(12).fill(0)}]
+  ps:[{id:0,label:'Scenario 1',color:'#0c8599',mult:1.0,mult2:1.0,srcs:Array(12).fill('avg'),outflow:PS_OUT.map((v,i)=>+(v/DAYS[i]).toFixed(3)),extra:Array(12).fill(0)}]
 };
 
 function addSc(tank){
@@ -1398,107 +1404,25 @@ function updPS(){
   document.getElementById('tbl-ps').innerHTML=mkTbl(_psAllData[_psTblSc],PS_MAX,PS_CRIT);
 }
 
-// ══ INFLOW/OUTFLOW SCENARIO STATE ══
-const _SC_PAL2=['#3b5bdb','#2f9e44','#e03131','#7048e8'];
-let _infMode={dk:'all',ps:'all'};
-let _outMode={dk:'all',ps:'all'};
-let _infSc={dk:[{id:0,color:'#3b5bdb',key:'avg'}],ps:[{id:0,color:'#0c8599',key:'avg'}]};
-let _outSc={dk:[{id:0,color:'#3b5bdb',key:'avg'}],ps:[{id:0,color:'#0c8599',key:'avg'}]};
-const _infScN={dk:1,ps:1},_outScN={dk:1,ps:1};
-
-function setInfMode(tank,mode){
-  _infMode[tank]=mode;
-  document.querySelectorAll('#inf-mode-'+tank+'-btns .yr-btn').forEach((b,i)=>b.classList.toggle('active',mode==='all'?i===0:i===1));
-  const m=document.getElementById('inf-sc-mgr-'+tank);
-  if(m)m.style.display=mode==='sc'?'':'none';
-  _renderInfScMgr(tank);
-  tank==='dk'?renderInflowDK():renderInflowPS();
-}
-function setOutMode(tank,mode){
-  _outMode[tank]=mode;
-  document.querySelectorAll('#out-mode-'+tank+'-btns .yr-btn').forEach((b,i)=>b.classList.toggle('active',mode==='all'?i===0:i===1));
-  const m=document.getElementById('out-sc-mgr-'+tank);
-  if(m)m.style.display=mode==='sc'?'':'none';
-  _renderOutScMgr(tank);
-  tank==='dk'?renderOutflowDK():renderOutflowPS();
-}
-function _mkYrOptsHtml(){
-  return'<option value="avg">เฉลี่ย 10 ปี</option><option value="avg5">เฉลี่ย 5 ปี</option>'+
-    INF_YR_KEYS.map(k=>`<option value="${k}">ปี ${INF_YR_THAI[k]||k}</option>`).join('');
-}
-function _renderScMgrGeneric(scArr,tank,type){
-  const listEl=document.getElementById(type+'-sc-list-'+tank);
-  if(!listEl)return;
-  const yOpts=_mkYrOptsHtml();
-  listEl.innerHTML=scArr.map((s,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 2px;flex-wrap:wrap">
-    <div style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
-    <span style="font-size:11px;font-weight:700;min-width:70px;color:${s.color}">Scenario ${i+1}</span>
-    <select id="${type}-sc-sel-${tank}-${s.id}" class="inf-sel">${yOpts}</select>
-    ${scArr.length>1?`<button class="sc-rm" onclick="_rmSc2('${type}','${tank}',${s.id})">✕</button>`:''}
-  </div>`).join('');
-  scArr.forEach(s=>{
-    const el=document.getElementById(`${type}-sc-sel-${tank}-${s.id}`);
-    if(el){
-      el.value=s.key;
-      el.onchange=function(){
-        const sc=(type==='inf'?_infSc:_outSc)[tank].find(x=>x.id===s.id);
-        if(sc)sc.key=this.value;
-        if(type==='inf')tank==='dk'?renderInflowDK():renderInflowPS();
-        else tank==='dk'?renderOutflowDK():renderOutflowPS();
-      };
-    }
-  });
-  const addBtn=document.getElementById(type+'-sc-add-'+tank);
-  if(addBtn)addBtn.style.display=scArr.length>=4?'none':'';
-}
-function _renderInfScMgr(tank){_renderScMgrGeneric(_infSc[tank],tank,'inf');}
-function _renderOutScMgr(tank){_renderScMgrGeneric(_outSc[tank],tank,'out');}
-function addInflowSc(tank){
-  if(_infSc[tank].length>=4)return;
-  const id=_infScN[tank]++;
-  _infSc[tank].push({id,color:_SC_PAL2[_infSc[tank].length%4],key:'avg'});
-  _renderInfScMgr(tank);
-  tank==='dk'?renderInflowDK():renderInflowPS();
-}
-function addOutflowSc(tank){
-  if(_outSc[tank].length>=4)return;
-  const id=_outScN[tank]++;
-  _outSc[tank].push({id,color:_SC_PAL2[_outSc[tank].length%4],key:'avg'});
-  _renderOutScMgr(tank);
-  tank==='dk'?renderOutflowDK():renderOutflowPS();
-}
-function _rmSc2(type,tank,id){
-  if(type==='inf'){
-    if(_infSc[tank].length<=1)return;
-    _infSc[tank]=_infSc[tank].filter(s=>s.id!==id);
-    _renderInfScMgr(tank);
-    tank==='dk'?renderInflowDK():renderInflowPS();
-  } else {
-    if(_outSc[tank].length<=1)return;
-    _outSc[tank]=_outSc[tank].filter(s=>s.id!==id);
-    _renderOutScMgr(tank);
-    tank==='dk'?renderOutflowDK():renderOutflowPS();
-  }
-}
-
 // ══ INFLOW TAB ══
 // ══ INFLOW DATA ══
 const SC_COLORS=['#3b5bdb','#2f9e44','#e03131'];
 // Year-view dropdown constants
-let INF_YR_KEYS=['y68','y67','y66','y65','y64','y63','y62','y61','y60','y59','y58','y57','y56','y55'];
-let INF_YR_THAI={y68:'2568',y67:'2567',y66:'2566',y65:'2565',y64:'2564',y63:'2563',y62:'2562',y61:'2561',y60:'2560',y59:'2559',y58:'2558',y57:'2557',y56:'2556',y55:'2555'};
+// INF_YR_KEYS, INF_YR_THAI populated dynamically in loadData()
+let INF_YR_KEYS=[];
+let INF_YR_THAI={};
 const INF_YR_PAL=['#4dabf7','#63e6be','#ffa94d','#f783ac','#a9e34b','#74c0fc','#38d9a9','#fd7e14','#f06595','#74b816','#a5d8ff','#20c997','#e64980','#37b24d'];
 const _Z12=Array(12).fill(0);
 
-// Outflow year-keyed data (populated by loadDataJson)
+// Outflow year-keyed data (mirrors inflow structure; year values = zero until real data loaded)
 const KY_OUT=[13.64,12.32,13.64,13.2,13.64,13.2,13.64,13.64,13.2,13.64,13.2,13.64];
 const NPL_OUT=[22.63,20.44,22.63,21.9,22.63,21.9,22.63,22.63,21.9,22.63,21.9,22.63];
-function _mkOutYr(avg){const o={avg:[...avg],avg5:[...avg]};INF_YR_KEYS.forEach(k=>o[k]=[..._Z12]);return o;}
-let THREE_OUT_YR=_mkOutYr(THREE_OUT);
-let DK_OUT_YR=_mkOutYr(DK_OUT);
-let KY_OUT_YR=_mkOutYr(KY_OUT);
-let NPL_OUT_YR=_mkOutYr(NPL_OUT);
-let PS_OUT_YR=_mkOutYr(PS_OUT);
+// THREE_OUT_YR etc. populated dynamically in loadData()
+let THREE_OUT_YR={avg:[...THREE_OUT],avg5:[...THREE_OUT]};
+let DK_OUT_YR={avg:[...DK_OUT],avg5:[...DK_OUT]};
+let KY_OUT_YR={avg:[...KY_OUT],avg5:[...KY_OUT]};
+let NPL_OUT_YR={avg:[...NPL_OUT],avg5:[...NPL_OUT]};
+let PS_OUT_YR={avg:[...PS_OUT],avg5:[...PS_OUT]};
 
 // Build datasets from a data source object by year-dropdown value
 // bold=true → main chart line width, bold=false → sub-chart (smaller)
@@ -1520,10 +1444,8 @@ function _yrDs(src,yr,bold){
 function _mkSparkMini(canvasId,valId,data,color){
   const el=document.getElementById(canvasId);
   const vEl=document.getElementById(valId);
-  const d2=(data||[]).map(v=>v??0);  // null→0 for sparkline
-  if(vEl) vEl.textContent=f(sum(d2));
+  if(vEl) vEl.textContent=f(sum(data||[]));
   if(!el) return;
-  data=d2;
   kc(canvasId);
   CH[canvasId]=new Chart(el,{
     type:'line',
@@ -1575,47 +1497,60 @@ function _scDs(src,keys,bold){
   return keys.map((k,i)=>({label:lbl(k),data:src[k]||_Z12,borderColor:SC_COLORS[i%3],backgroundColor:SC_COLORS[i%3]+'22',fill:false,tension:.35,borderWidth:lnW,pointRadius:prR,pointBackgroundColor:SC_COLORS[i%3],pointBorderColor:'#fff',pointBorderWidth:prW}));
 }
 
-function _scDs2(src,scArr,bold){
-  return scArr.map((s,i)=>({label:'Scenario '+(i+1),data:(src[s.key]||_Z12).map(v=>v??null),borderColor:s.color,backgroundColor:s.color+'22',fill:false,tension:.35,borderWidth:bold?2.5:2,pointRadius:bold?4:3,pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:bold?1.5:1}));
-}
 function renderInflowDK(){
-  if(_infMode.dk==='all'){
+  const yr=document.getElementById('inf-yr-dk')?.value||'all';
+  if(yr==='all'){
     _mkLineChart('c-3tk',_yrDs(THREE_IN,'all',true));
     _mkLineChart('c-dki',_yrDs(DK_IN,'all',false));
     _mkLineChart('c-kyi',_yrDs(KY_IN,'all',false));
     _mkLineChart('c-npli',_yrDs(NPL_IN,'all',false));
   } else {
-    _mkLineChart('c-3tk',_scDs2(THREE_IN,_infSc.dk,true));
-    _mkLineChart('c-dki',_scDs2(DK_IN,_infSc.dk,false));
-    _mkLineChart('c-kyi',_scDs2(KY_IN,_infSc.dk,false));
-    _mkLineChart('c-npli',_scDs2(NPL_IN,_infSc.dk,false));
+    const keys=_sc3Keys('inf-sc');
+    _mkLineChart('c-3tk',_scDs(THREE_IN,keys,true));
+    _mkLineChart('c-dki',_scDs(DK_IN,keys,false));
+    _mkLineChart('c-kyi',_scDs(KY_IN,keys,false));
+    _mkLineChart('c-npli',_scDs(NPL_IN,keys,false));
   }
 }
-function onYrChangeDK(){}  // kept for compat
+
+// Year dropdown preset: set sc1=yr, sc2/sc3=none, then render
+function onYrChangeDK(){
+  const yr=document.getElementById('inf-yr-dk')?.value||'all';
+  if(yr!=='all'){
+    [1,2,3].forEach(n=>{const e=document.getElementById(`inf-sc${n}`);if(e)e.value=n===1?yr:'none';});
+  }
+  renderInflowDK();
+}
 
 function renderInflowPS(){
-  if(_infMode.ps==='all'){
+  const yr=document.getElementById('inf-yr-ps')?.value||'all';
+  if(yr==='all'){
     _mkLineChart('c-psi',_yrDs(PS_IN,'all',true));
   } else {
-    _mkLineChart('c-psi',_scDs2(PS_IN,_infSc.ps,true));
+    const keys=_sc3Keys('inf-sc-ps');
+    _mkLineChart('c-psi',_scDs(PS_IN,keys,true));
   }
 }
-function onYrChangePS(){}  // kept for compat
+
+function onYrChangePS(){
+  const yr=document.getElementById('inf-yr-ps')?.value||'all';
+  if(yr!=='all'){
+    [1,2,3].forEach(n=>{const e=document.getElementById(`inf-sc-ps${n}`);if(e)e.value=n===1?yr:'none';});
+  }
+  renderInflowPS();
+}
 
 function initInflow(){
-  // Spark mini cards — use most recent year if available
-  const _prevYr=INF_YR_KEYS.find(k=>(THREE_IN[k]||[]).filter(v=>v!=null).length>=10)||'y55';
-  const _dryYr=INF_YR_KEYS.slice().sort((a,b)=>{const sa=sum(THREE_IN[a]||[]),sb=sum(THREE_IN[b]||[]);return sa-sb;})[0]||'y62';
-  const _prevPs=INF_YR_KEYS.find(k=>(PS_IN[k]||[]).filter(v=>v!=null).length>=10)||'y62';
+  // Spark mini cards
   _mkSparkMini('c-3tk-avg','sv-3tk-avg',THREE_IN.avg,'#3b5bdb');
-  _mkSparkMini('c-3tk-prev','sv-3tk-prev',THREE_IN[_prevYr]||THREE_IN.avg,'#2f9e44');
-  _mkSparkMini('c-3tk-dry','sv-3tk-dry',THREE_IN[_dryYr]||THREE_IN.avg,'#e03131');
+  _mkSparkMini('c-3tk-prev','sv-3tk-prev',THREE_IN.y55,'#2f9e44');
+  _mkSparkMini('c-3tk-dry','sv-3tk-dry',THREE_IN.y62,'#e03131');
   _mkSparkMini('c-ps-avg','sv-ps-avg',PS_IN.avg,'#0c8599');
-  _mkSparkMini('c-ps-prev','sv-ps-prev',PS_IN[_prevPs]||PS_IN.avg,'#2f9e44');
-  _mkSparkMini('c-ps-dry','sv-ps-dry',PS_IN[_dryYr]||PS_IN.avg,'#e03131');
-  // Init scenario managers
-  _renderInfScMgr('dk');
-  _renderInfScMgr('ps');
+  _mkSparkMini('c-ps-prev','sv-ps-prev',PS_IN.y62,'#2f9e44');
+  _mkSparkMini('c-ps-dry','sv-ps-dry',PS_IN.y62,'#e03131');
+  // Build 3-selector rows (dynamic, once per init)
+  _buildScRow('inf-scrow-dk','inf-sc','renderInflowDK',['avg','y62','none']);
+  _buildScRow('inf-scrow-ps','inf-sc-ps','renderInflowPS',['avg','y62','none']);
   // Main line charts
   renderInflowDK();
   renderInflowPS();
@@ -1644,41 +1579,56 @@ function initInflow(){
 }
 
 function renderOutflowDK(){
-  if(_outMode.dk==='all'){
+  const yr=document.getElementById('out-yr-dk')?.value||'all';
+  if(yr==='all'){
     _mkLineChart('c-3tko',_yrDs(THREE_OUT_YR,'all',true));
     _mkLineChart('c-dko',_yrDs(DK_OUT_YR,'all',false));
     _mkLineChart('c-kyo',_yrDs(KY_OUT_YR,'all',false));
     _mkLineChart('c-nplo',_yrDs(NPL_OUT_YR,'all',false));
   } else {
-    _mkLineChart('c-3tko',_scDs2(THREE_OUT_YR,_outSc.dk,true));
-    _mkLineChart('c-dko',_scDs2(DK_OUT_YR,_outSc.dk,false));
-    _mkLineChart('c-kyo',_scDs2(KY_OUT_YR,_outSc.dk,false));
-    _mkLineChart('c-nplo',_scDs2(NPL_OUT_YR,_outSc.dk,false));
+    const keys=_sc3Keys('out-sc');
+    _mkLineChart('c-3tko',_scDs(THREE_OUT_YR,keys,true));
+    _mkLineChart('c-dko',_scDs(DK_OUT_YR,keys,false));
+    _mkLineChart('c-kyo',_scDs(KY_OUT_YR,keys,false));
+    _mkLineChart('c-nplo',_scDs(NPL_OUT_YR,keys,false));
   }
 }
-function onYrChangeOutDK(){}  // kept for compat
+
+function onYrChangeOutDK(){
+  const yr=document.getElementById('out-yr-dk')?.value||'all';
+  if(yr!=='all'){
+    [1,2,3].forEach(n=>{const e=document.getElementById(`out-sc${n}`);if(e)e.value=n===1?yr:'none';});
+  }
+  renderOutflowDK();
+}
 
 function renderOutflowPS(){
-  if(_outMode.ps==='all'){
+  const yr=document.getElementById('out-yr-ps')?.value||'all';
+  if(yr==='all'){
     _mkLineChart('c-pso',_yrDs(PS_OUT_YR,'all',true));
   } else {
-    _mkLineChart('c-pso',_scDs2(PS_OUT_YR,_outSc.ps,true));
+    const keys=_sc3Keys('out-sc-ps');
+    _mkLineChart('c-pso',_scDs(PS_OUT_YR,keys,true));
   }
 }
-function onYrChangeOutPS(){}  // kept for compat
+
+function onYrChangeOutPS(){
+  const yr=document.getElementById('out-yr-ps')?.value||'all';
+  if(yr!=='all'){
+    [1,2,3].forEach(n=>{const e=document.getElementById(`out-sc-ps${n}`);if(e)e.value=n===1?yr:'none';});
+  }
+  renderOutflowPS();
+}
 
 function initOutflow(){
-  const _prevYr=INF_YR_KEYS.find(k=>(THREE_OUT_YR[k]||[]).filter(v=>v&&v>0).length>=10)||'avg';
-  const _peakYr=INF_YR_KEYS.slice().sort((a,b)=>{const sa=sum(THREE_OUT_YR[a]||[]),sb=sum(THREE_OUT_YR[b]||[]);return sb-sa;})[0]||'avg';
-  const _prevPs=INF_YR_KEYS.find(k=>(PS_OUT_YR[k]||[]).filter(v=>v&&v>0).length>=10)||'avg';
   _mkSparkMini('c-3tko-avg2','sv-3tko-avg',THREE_OUT_YR.avg,'#3b5bdb');
-  _mkSparkMini('c-3tko-prev2','sv-3tko-prev',THREE_OUT_YR[_prevYr]||THREE_OUT_YR.avg,'#2f9e44');
-  _mkSparkMini('c-3tko-peak2','sv-3tko-peak',THREE_OUT_YR[_peakYr]||THREE_OUT_YR.avg,'#e03131');
+  _mkSparkMini('c-3tko-prev2','sv-3tko-prev',THREE_OUT_YR.avg,'#2f9e44');
+  _mkSparkMini('c-3tko-peak2','sv-3tko-peak',THREE_OUT_YR.avg,'#e03131');
   _mkSparkMini('c-pso-avg2','sv-pso-avg',PS_OUT_YR.avg,'#0c8599');
-  _mkSparkMini('c-pso-prev2','sv-pso-prev',PS_OUT_YR[_prevPs]||PS_OUT_YR.avg,'#2f9e44');
-  _mkSparkMini('c-pso-peak2','sv-pso-peak',PS_OUT_YR[_peakYr]||PS_OUT_YR.avg,'#e03131');
-  _renderOutScMgr('dk');
-  _renderOutScMgr('ps');
+  _mkSparkMini('c-pso-prev2','sv-pso-prev',PS_OUT_YR.avg,'#2f9e44');
+  _mkSparkMini('c-pso-peak2','sv-pso-peak',PS_OUT_YR.avg,'#e03131');
+  _buildScRow('out-scrow-dk','out-sc','renderOutflowDK',['avg','y62','none']);
+  _buildScRow('out-scrow-ps','out-sc-ps','renderOutflowPS',['avg','y62','none']);
   renderOutflowDK();
   renderOutflowPS();
   // Summary table
@@ -1886,109 +1836,103 @@ function toggleNight(){
 }
 
 // ══ LOAD DATA FROM data.json ══
-async function loadDataJson() {
-  let d;
-  try { d = await fetch('data.json').then(r => r.json()); }
-  catch(e) { console.warn('loadDataJson: cannot fetch data.json, using built-in defaults'); return; }
-
-  const inf = d.inflow   || {};
-  const out = d.outflow  || {};
-  const lev = d.level_end || {};
-  const r4  = v => v != null ? +v.toFixed(4) : 0;
-
-  // ── average of last N complete years (>=10 months non-null) ──
-  function yearAvg(obj, n) {
-    const ks = Object.keys(obj)
-      .filter(k => (obj[k]||[]).filter(v=>v!=null).length >= 10)
-      .sort().slice(-n);
-    if (!ks.length) return Array(12).fill(0);
-    return Array.from({length:12}, (_,m) => {
-      const vs = ks.map(k=>(obj[k]||[])[m]).filter(v=>v!=null);
-      return vs.length ? r4(vs.reduce((a,b)=>a+b,0)/vs.length) : 0;
-    });
+async function loadData(){
+  let jd;
+  try{
+    const r=await fetch('data.json');
+    jd=await r.json();
+  }catch(e){
+    console.warn('loadData: cannot fetch data.json',e);
+    jd={inflow:{DK:{},KY:{},NPL:{},THREE:{},PS:{}},outflow:{DK:{},KY:{},NPL:{},THREE:{},PS:{}}};
   }
 
-  // ── INF_YR_KEYS: all years with ≥1 month (includes partial year like y69) ──
-  const allThreeKs = Object.keys(inf.THREE||{})
-    .filter(k => (inf.THREE[k]||[]).filter(v=>v!=null).length >= 1)
-    .sort().reverse();
-  // complete years (≥10 months) used for averages and DK_SRCS
-  const threeKs = allThreeKs.filter(k => (inf.THREE[k]||[]).filter(v=>v!=null).length >= 10);
-  INF_YR_KEYS.length = 0;
-  INF_YR_KEYS.push(...allThreeKs);
-  Object.keys(INF_YR_THAI).forEach(k => delete INF_YR_THAI[k]);
-  allThreeKs.forEach(k => { const yy=parseInt(k.slice(1)); INF_YR_THAI[k]=String(2500+yy); });
+  const curThaiYr=new Date().getFullYear()+543;
 
-  // ── Inflow per reservoir (avg, avg5, per-year) ──
-  const infMap = {THREE:THREE_IN, DK:DK_IN, KY:KY_IN, NPL:NPL_IN, PS:PS_IN};
-  Object.entries(infMap).forEach(([res, obj]) => {
-    const src = inf[res] || {};
-    // keep null for missing months so partial years (y69) show gaps instead of 0
-    Object.keys(src).forEach(k => { obj[k] = (src[k]||[]).map(v => v ?? null); });
-    obj.avg  = yearAvg(src, 10);
-    obj.avg5 = yearAvg(src, 5);
-  });
-
-  // ── Outflow averages (splice to mutate existing let arrays) ──
-  const newThreeOut = yearAvg(out.THREE||{}, 10);
-  const newPsOut    = yearAvg(out.PS||{},    10);
-  if (newThreeOut.some(v=>v>0)) THREE_OUT.splice(0, 12, ...newThreeOut);
-  if (newPsOut.some(v=>v>0))    PS_OUT.splice(0, 12, ...newPsOut);
-
-  // ── Outflow per year ──
-  function fillOutYr(yrObj, src, avgArr) {
-    yrObj.avg  = [...avgArr];
-    yrObj.avg5 = [...avgArr];
-    Object.keys(src||{}).forEach(k => { yrObj[k] = ((src||{})[k]||[]).map(v => v ?? null); });
+  // avg of last N complete years (exclude current year)
+  function _avgN(yearObj,n){
+    const keys=Object.keys(yearObj)
+      .filter(k=>/^y\d{2}$/.test(k)&&(2500+parseInt(k.slice(1)))<curThaiYr)
+      .sort((a,b)=>parseInt(b.slice(1))-parseInt(a.slice(1)));
+    const recent=keys.slice(0,n);
+    const s=Array(12).fill(0),c=Array(12).fill(0);
+    recent.forEach(k=>(yearObj[k]||[]).forEach((v,i)=>{if(v!=null){s[i]+=v;c[i]++;}}));
+    return s.map((v,i)=>c[i]>0?Math.round(v/c[i]*1000)/1000:0);
   }
-  fillOutYr(THREE_OUT_YR, out.THREE, THREE_OUT);
-  fillOutYr(DK_OUT_YR,    out.DK,    yearAvg(out.DK||{},  10));
-  fillOutYr(KY_OUT_YR,    out.KY,    yearAvg(out.KY||{},  10));
-  fillOutYr(NPL_OUT_YR,   out.NPL,   yearAvg(out.NPL||{}, 10));
-  fillOutYr(PS_OUT_YR,    out.PS,    PS_OUT);
 
-  // ── Latest actual level_end → ACT values + STAR_MONTH_IDX ──
-  function latestLev(levObj) {
-    const ks = Object.keys(levObj||{}).sort().reverse();
-    for (const k of ks) {
-      const arr = levObj[k]||[];
-      for (let m=11; m>=0; m--) { if(arr[m]!=null) return {val:arr[m], month:m}; }
-    }
-    return {val:0, month:5};
+  // build inflow object: {avg, avg5, y55:[], y62:[], ...}
+  function buildInObj(raw){
+    const o={avg:_avgN(raw,10),avg5:_avgN(raw,5)};
+    Object.keys(raw).forEach(k=>{if(/^y\d{2}$/.test(k))o[k]=(raw[k]||[]).map(v=>v??0);});
+    return o;
   }
-  const thLev = latestLev(lev.THREE);
-  const psLev = latestLev(lev.PS);
-  THREE_ACT_JUN  = thLev.val;
-  PS_ACT_JUN     = psLev.val;
-  STAR_MONTH_IDX = thLev.month;
 
-  // ── DK_SRCS: avg + avg5 + all year keys (incl. partial years for forecast month selection) ──
-  DK_SRCS.length = 0;
-  DK_SRCS.push({v:'avg',l:'เฉลี่ย 10 ปี'}, {v:'avg5',l:'เฉลี่ย 5 ปี'});
-  allThreeKs.forEach(k => DK_SRCS.push({v:k, l:'ปี '+INF_YR_THAI[k]}));
+  const inf=jd.inflow||{};
+  DK_IN    =buildInObj(inf.DK   ||{});
+  KY_IN    =buildInObj(inf.KY   ||{});
+  NPL_IN   =buildInObj(inf.NPL  ||{});
+  THREE_IN =buildInObj(inf.THREE||{});
+  PS_IN    =buildInObj(inf.PS   ||{});
 
-  // ── PS_SRCS: avg + avg5 + SSP scenarios + year keys ──
-  const psYrKs = Object.keys(inf.PS||{})
-    .filter(k => k.startsWith('y') && (inf.PS[k]||[]).filter(v=>v!=null).length>=10)
-    .sort().reverse();
-  PS_SRCS.length = 0;
-  PS_SRCS.push(
-    {v:'avg',l:'เฉลี่ย 10 ปี'}, {v:'avg5',l:'เฉลี่ย 5 ปี'},
-    {v:'ssp3_2030',l:'SSP3@2030'},{v:'ssp3_2050',l:'SSP3@2050'},
-    {v:'ssp5_2030',l:'SSP5@2030'},{v:'ssp5_2050',l:'SSP5@2050'}
-  );
-  psYrKs.forEach(k => PS_SRCS.push({v:k, l:'ปี '+(INF_YR_THAI[k]||k)}));
+  // build year key lists — union of ALL reservoirs, sorted descending
+  const allInfKeys=new Set();
+  ['DK','KY','NPL','THREE','PS'].forEach(res=>
+    Object.keys(inf[res]||{}).filter(k=>/^y\d{2}$/.test(k)).forEach(k=>allInfKeys.add(k)));
+  INF_YR_KEYS=[...allInfKeys].sort((a,b)=>parseInt(b.slice(1))-parseInt(a.slice(1)));
+  INF_YR_THAI={};
+  INF_YR_KEYS.forEach(k=>{INF_YR_THAI[k]=String(2500+parseInt(k.slice(1)));});
 
-  // ── Update default scenario outflow with real averages ──
-  multiSc.dk[0].outflow = THREE_OUT.map((v,i) => +(v/DAYS[i]).toFixed(3));
-  multiSc.ps[0].outflow = PS_OUT.map((v,i)    => +(v/DAYS[i]).toFixed(3));
+  // PS-specific year keys (may include older years not in THREE)
+  const psKeys=Object.keys(inf.PS||{})
+    .filter(k=>/^y\d{2}$/.test(k))
+    .sort((a,b)=>parseInt(b.slice(1))-parseInt(a.slice(1)));
+  const psYrThai={};
+  psKeys.forEach(k=>{psYrThai[k]=String(2500+parseInt(k.slice(1)));});
+
+  // THREE-only keys (for DK inflow/outflow chart year dropdowns)
+  const threeKeys=Object.keys(inf.THREE||{})
+    .filter(k=>/^y\d{2}$/.test(k))
+    .sort((a,b)=>parseInt(b.slice(1))-parseInt(a.slice(1)));
+  const threeYrThai={};
+  threeKeys.forEach(k=>{threeYrThai[k]=String(2500+parseInt(k.slice(1)));});
+
+  // simulation source dropdowns
+  const threeOpts=threeKeys.map(k=>({v:k,l:'ปี '+threeYrThai[k]}));
+  const psOpts=psKeys.map(k=>({v:k,l:'ปี '+psYrThai[k]}));
+  DK_SRCS=[{v:'avg',l:'เฉลี่ย 10ปี'},{v:'avg5',l:'เฉลี่ย 5ปี'},...threeOpts];
+  PS_SRCS=[{v:'avg',l:'เฉลี่ย 10ปี'},{v:'avg5',l:'เฉลี่ย 5ปี'},...psOpts];
+
+  // outflow year objects (real historical data + fixed avg fallback)
+  const outf=jd.outflow||{};
+  function buildOutObj(raw,fallbackAvg,yearKeys){
+    const o={avg:[...fallbackAvg],avg5:[...fallbackAvg]};
+    yearKeys.forEach(k=>{o[k]=(raw[k]||[]).map(v=>v??0);});
+    return o;
+  }
+  THREE_OUT_YR=buildOutObj(outf.THREE||{},THREE_OUT,threeKeys);
+  DK_OUT_YR   =buildOutObj(outf.DK   ||{},DK_OUT,  threeKeys);
+  KY_OUT_YR   =buildOutObj(outf.KY   ||{},KY_OUT,  threeKeys);
+  NPL_OUT_YR  =buildOutObj(outf.NPL  ||{},NPL_OUT, threeKeys);
+  PS_OUT_YR   =buildOutObj(outf.PS   ||{},PS_OUT,  psKeys);
+
+  // populate main year dropdowns
+  function _populateYrSel(selId,keys,thaiMap){
+    const sel=document.getElementById(selId);
+    if(!sel)return;
+    [...sel.options].filter(o=>/^y\d{2}$/.test(o.value)).forEach(o=>o.remove());
+    keys.forEach(k=>sel.appendChild(new Option('ปี '+thaiMap[k],k)));
+  }
+  _populateYrSel('inf-yr-dk', threeKeys, threeYrThai);
+  _populateYrSel('inf-yr-ps', psKeys,    psYrThai);
+  _populateYrSel('out-yr-dk', threeKeys, threeYrThai);
+  _populateYrSel('out-yr-ps', psKeys,    psYrThai);
+
+  // init dashboard
+  renderScList('dk');
+  renderScList('ps');
+  updDK();
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadDataJson();
-  renderScList('dk'); renderScList('ps');
-  updDK(); // PS tab initializes lazily on first visit (canvas must be visible for Chart.js)
-});
+document.addEventListener('DOMContentLoaded',()=>{ loadData(); });
 </script>
 </body>
 </html>
