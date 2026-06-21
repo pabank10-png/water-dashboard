@@ -1222,8 +1222,10 @@ function updDK(){
       const srcKey=s.srcs[5]||'avg';
       const srcLbl=srcKey==='avg'?'เฉลี่ย 10 ปี':srcKey==='avg5'?'เฉลี่ย 5 ปี':('ปี '+(INF_YR_THAI[srcKey]||srcKey));
       const tot=r2(sData.slice(0,12).reduce((a,d)=>a+d.inflow,0));
+      const tot2=nYears===2?r2(sData.slice(12,24).reduce((a,d)=>a+d.inflow,0)):null;
       const diff=si===0?'':`<span class="iss-diff ${tot>=base?'pos':'neg'}">${tot>=base?'+':''}${f(tot-base)} MCM</span>`;
-      return`<div class="iss-row"><span class="iss-dot" style="background:${s.color}"></span><span class="iss-lbl">${s.label}</span><span class="iss-src">(${srcLbl})</span><span class="iss-tot">${f(tot)} MCM/ปี 1</span>${diff}</div>`;
+      const totHtml=`${f(tot)} MCM/ปี 1`+(tot2!=null?` <span style="opacity:.55">·</span> ${f(tot2)} MCM/ปี 2`:'');
+      return`<div class="iss-row"><span class="iss-dot" style="background:${s.color}"></span><span class="iss-lbl">${s.label}</span><span class="iss-src">(${srcLbl})</span><span class="iss-tot">${totHtml}</span>${diff}</div>`;
     }).join('');
   }
 
@@ -1370,8 +1372,10 @@ function updPS(){
       const srcKey=s.srcs[5]||'avg';
       const srcLbl=srcKey==='avg'?'เฉลี่ย 10 ปี':srcKey==='avg5'?'เฉลี่ย 5 ปี':('ปี '+(INF_YR_THAI[srcKey]||srcKey));
       const tot=r2(sData.slice(0,12).reduce((a,d)=>a+d.inflow,0));
+      const tot2=nYears===2?r2(sData.slice(12,24).reduce((a,d)=>a+d.inflow,0)):null;
       const diff=si===0?'':`<span class="iss-diff ${tot>=basePs?'pos':'neg'}">${tot>=basePs?'+':''}${f(tot-basePs)} MCM</span>`;
-      return`<div class="iss-row"><span class="iss-dot" style="background:${s.color}"></span><span class="iss-lbl">${s.label}</span><span class="iss-src">(${srcLbl})</span><span class="iss-tot">${f(tot)} MCM/ปี 1</span>${diff}</div>`;
+      const totHtml=`${f(tot)} MCM/ปี 1`+(tot2!=null?` <span style="opacity:.55">·</span> ${f(tot2)} MCM/ปี 2`:'');
+      return`<div class="iss-row"><span class="iss-dot" style="background:${s.color}"></span><span class="iss-lbl">${s.label}</span><span class="iss-src">(${srcLbl})</span><span class="iss-tot">${totHtml}</span>${diff}</div>`;
     }).join('');
   }
 
