@@ -1627,6 +1627,10 @@ function renderInflowTable(){
       ...(worstKey3?[{k:worstKey3,l:'ปีแย่สุด ('+INF_YR_THAI[worstKey3]+')',color:'#e03131'}]:[]),
       ...(curKey?[{k:curKey,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],THREE_IN);
+  } else {
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_IN);
+  }
+  if(stPs.showAll){
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',[
       {k:'avg',l:'เฉลี่ย 10ปี',color:'#0c8599'},
       ...(prevKey?[{k:prevKey,l:'ปีก่อนหน้า ('+INF_YR_THAI[prevKey]+')',color:'#2f9e44'}]:[]),
@@ -1634,7 +1638,6 @@ function renderInflowTable(){
       ...(curKey?[{k:curKey,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],PS_IN);
   } else {
-    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_IN);
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',stPs.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),PS_IN);
   }
   if(note)h+=`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
@@ -1714,6 +1717,10 @@ function renderOutflowTable(){
       ...(worstT?[{k:worstT,l:'ปีสูงสุด ('+outYrThai(worstT)+')',color:'#e03131'}]:[]),
       ...(curT?[{k:curT,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],THREE_OUT_YR);
+  } else {
+    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_OUT_YR);
+  }
+  if(stPs.showAll){
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',[
       {k:'avg',l:'เฉลี่ย 10ปี',color:'#0c8599'},
       ...(prevP?[{k:prevP,l:'ปีก่อนหน้า ('+outYrThai(prevP)+')',color:'#2f9e44'}]:[]),
@@ -1721,7 +1728,6 @@ function renderOutflowTable(){
       ...(curP?[{k:curP,l:'ปีล่าสุด*',color:'#ae3ec9'}]:[]),
     ],PS_OUT_YR);
   } else {
-    h+=_buildTbl('3อ่าง (DK+KY+NPL)','#3b5bdb',st.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),THREE_OUT_YR);
     h+=_buildTbl('ประแสร์ (PS)','#0c8599',stPs.scs.map((s,i)=>({k:s.key,l:_scLbl(s.key)+' (Sc.'+(i+1)+')',color:SC_COLORS[i%4]})),PS_OUT_YR);
   }
   if(note)h+=`<div style="font-size:10px;color:var(--text3);margin-top:4px">${note}</div>`;
