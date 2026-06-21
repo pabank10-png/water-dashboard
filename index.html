@@ -451,10 +451,6 @@ body.dark .yl-actual{background:#f0f0f0}
       <div id="dk-lvleg" class="yl-row"></div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-head"><i class="ti ti-droplet" aria-hidden="true"></i><span class="ctitle">Inflow รายเดือน ตาม Scenario (MCM/เดือน)</span></div>
-    <div style="position:relative;height:175px"><canvas id="c-dk-dec" role="img" aria-label="3อ่าง monthly inflow by scenario"></canvas></div>
-  </div>
   <div class="sc-mgr">
     <div class="sc-mgr-head">
       <div class="sc-mgr-title"><i class="ti ti-layers" aria-hidden="true"></i>Forecast scenarios — เลือก Inflow แต่ละเดือนจากปีที่มี (สูงสุด 4 Scenarios)</div>
@@ -494,10 +490,6 @@ body.dark .yl-actual{background:#f0f0f0}
       <div style="position:relative;height:275px"><canvas id="c-ps-lv" role="img" aria-label="PS water level forecast">PS level</canvas></div>
       <div id="ps-lvleg" class="yl-row"></div>
     </div>
-  </div>
-  <div class="card">
-    <div class="card-head"><i class="ti ti-droplet" aria-hidden="true"></i><span class="ctitle">Inflow รายเดือน ตาม Scenario (MCM/เดือน)</span></div>
-    <div style="position:relative;height:175px"><canvas id="c-ps-dec" role="img" aria-label="ประแสร์ monthly inflow by scenario"></canvas></div>
   </div>
   <div class="sc-mgr">
     <div class="sc-mgr-head">
@@ -1139,34 +1131,6 @@ function mkTbl(data,max,crit){
   return h;
 }
 
-// ══ MONTHLY INFLOW BY SCENARIO CHART ══
-function _buildDecChart(tank){
-  const canvasId=tank==='dk'?'c-dk-dec':'c-ps-dec';
-  const chartKey=tank==='dk'?'dkdec':'psdec';
-  const nYears=_simYears[tank];
-  const labels=_simLabels(nYears);
-  const allSc=multiSc[tank].map(s=>runSc(tank,s,nYears));
-  kc(chartKey);
-  CH[chartKey]=new Chart(document.getElementById(canvasId),{
-    type:'bar',
-    data:{labels,datasets:allSc.map((sData,si)=>{
-      const s=multiSc[tank][si];
-      return{label:s.label,data:sData.map(d=>d.inflow),backgroundColor:s.color+'99',borderRadius:4};
-    })},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{labels:{font:{size:10},boxWidth:9,color:_tc()}},
-        yearDivPlugin:nYears===2,
-        tooltip:{callbacks:{label:ctx=>` ${f(ctx.parsed.y)} MCM`}}
-      },
-      scales:{
-        y:{grid:{color:_gr()},ticks:_tk()},
-        x:{grid:{display:false},ticks:{font:{size:nYears===2?9:10},color:_tc()}}
-      }
-    }
-  });
-}
 
 // ══ CHART DEFAULTS ══
 function _gr(){return document.body.classList.contains('dark')?'rgba(45,212,191,.09)':'rgba(13,80,90,.07)';}
@@ -1242,7 +1206,6 @@ function updDK(){
   });
 
   initResMap('dk');
-  _buildDecChart('dk');
 
   kc('dkcmp');
   CH['dkcmp']=new Chart(document.getElementById('c-dk-cmp'),{type:'bar',data:{labels,datasets:allDK.map((sData,si)=>{
@@ -1391,7 +1354,6 @@ function updPS(){
 });
 
   // map-ps initialized lazily on first tab switch (container hidden at this point)
-  _buildDecChart('ps');
 
   kc('pscmp');
   CH['pscmp']=new Chart(document.getElementById('c-ps-cmp'),{type:'bar',data:{labels,datasets:allPS.map((sData,si)=>{
