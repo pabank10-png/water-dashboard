@@ -452,8 +452,8 @@ body.dark .yl-actual{background:#f0f0f0}
     </div>
   </div>
   <div class="card">
-    <div class="card-head"><i class="ti ti-calendar-stats" aria-hidden="true"></i><span class="ctitle">ปริมาณน้ำ ณ สิ้นปี (ธ.ค.) — ย้อนหลัง vs คาดการณ์ปีนี้ (MCM)</span></div>
-    <div style="position:relative;height:160px"><canvas id="c-dk-dec" role="img" aria-label="3อ่าง December end-of-year storage"></canvas></div>
+    <div class="card-head"><i class="ti ti-droplet" aria-hidden="true"></i><span class="ctitle">Inflow รายเดือน ตาม Scenario (MCM/เดือน)</span></div>
+    <div style="position:relative;height:175px"><canvas id="c-dk-dec" role="img" aria-label="3อ่าง monthly inflow by scenario"></canvas></div>
   </div>
   <div class="sc-mgr">
     <div class="sc-mgr-head">
@@ -496,8 +496,8 @@ body.dark .yl-actual{background:#f0f0f0}
     </div>
   </div>
   <div class="card">
-    <div class="card-head"><i class="ti ti-calendar-stats" aria-hidden="true"></i><span class="ctitle">ปริมาณน้ำ ณ สิ้นปี (ธ.ค.) — ย้อนหลัง vs คาดการณ์ปีนี้ (MCM)</span></div>
-    <div style="position:relative;height:160px"><canvas id="c-ps-dec" role="img" aria-label="ประแสร์ December end-of-year storage"></canvas></div>
+    <div class="card-head"><i class="ti ti-droplet" aria-hidden="true"></i><span class="ctitle">Inflow รายเดือน ตาม Scenario (MCM/เดือน)</span></div>
+    <div style="position:relative;height:175px"><canvas id="c-ps-dec" role="img" aria-label="ประแสร์ monthly inflow by scenario"></canvas></div>
   </div>
   <div class="sc-mgr">
     <div class="sc-mgr-head">
@@ -1139,50 +1139,30 @@ function mkTbl(data,max,crit){
   return h;
 }
 
-// ══ ANNUAL DECEMBER STORAGE CHART ══
+// ══ MONTHLY INFLOW BY SCENARIO CHART ══
 function _buildDecChart(tank){
-  const levDec=tank==='dk'?THREE_LEV_DEC:PS_LEV_DEC;
-  const MAX=tank==='dk'?THREE_MAX:PS_MAX;
-  const curTY=new Date().getFullYear()+543;
   const canvasId=tank==='dk'?'c-dk-dec':'c-ps-dec';
   const chartKey=tank==='dk'?'dkdec':'psdec';
-  const themeColor=tank==='dk'?'#3b5bdb':'#0c8599';
-  // Sort year keys ascending
-  const entries=Object.entries(levDec)
-    .map(([k,v])=>({k,yr:2500+parseInt(k.slice(1)),v}))
-    .sort((a,b)=>a.yr-b.yr);
-  const labels=entries.map(e=>String(e.yr));
-  const vals=entries.map(e=>e.v);
-  const bgColors=entries.map(e=>
-    e.yr===curTY-1?themeColor+'cc':themeColor+'55'
-  );
-  // Append current-year forecast Dec (Scenario 1) for each scenario
   const nYears=_simYears[tank];
-  multiSc[tank].forEach((s,si)=>{
-    const simData=runSc(tank,s,nYears);
-    const decVal=simData[11]?.end??null;
-    if(decVal!=null){
-      labels.push(String(curTY)+(multiSc[tank].length>1?' Sc.'+(si+1):'*'));
-      vals.push(decVal);
-      bgColors.push(s.color+'cc');
-    }
-  });
+  const labels=_simLabels(nYears);
+  const allSc=multiSc[tank].map(s=>runSc(tank,s,nYears));
   kc(chartKey);
   CH[chartKey]=new Chart(document.getElementById(canvasId),{
     type:'bar',
-    data:{labels,datasets:[
-      {label:'ปริมาณน้ำ ณ สิ้นปี (ธ.ค.)',data:vals,backgroundColor:bgColors,borderRadius:3,order:1},
-      {label:'Max',type:'line',data:Array(labels.length).fill(MAX),borderColor:'rgba(201,42,42,.4)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,order:0}
-    ]},
+    data:{labels,datasets:allSc.map((sData,si)=>{
+      const s=multiSc[tank][si];
+      return{label:s.label,data:sData.map(d=>d.inflow),backgroundColor:s.color+'99',borderRadius:4};
+    })},
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='Max'?null:` ${f(ctx.parsed.y)} MCM`}}
+        legend:{labels:{font:{size:10},boxWidth:9,color:_tc()}},
+        yearDivPlugin:nYears===2,
+        tooltip:{callbacks:{label:ctx=>` ${f(ctx.parsed.y)} MCM`}}
       },
       scales:{
-        y:{min:0,max:MAX*1.06,grid:{color:_gr()},ticks:_tk()},
-        x:{grid:{display:false},ticks:{font:{size:9},color:_tc(),maxRotation:60}}
+        y:{grid:{color:_gr()},ticks:_tk()},
+        x:{grid:{display:false},ticks:{font:{size:nYears===2?9:10},color:_tc()}}
       }
     }
   });
@@ -1257,7 +1237,8 @@ function updDK(){
       responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
       scales:{y:{min:0,max:THREE_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}
-    }
+    },
+  plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='★ Actual'||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
   });
 
   initResMap('dk');
@@ -1405,7 +1386,9 @@ function updPS(){
     {label:'Max cap.',data:Array(n).fill(295),borderColor:'rgba(201,42,42,.4)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,order:99}
   ]},options:{responsive:true,maintainAspectRatio:false,
     plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
-    scales:{y:{min:0,max:PS_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}}});
+    scales:{y:{min:0,max:PS_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}},
+  plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='★ Actual'||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
+});
 
   // map-ps initialized lazily on first tab switch (container hidden at this point)
   _buildDecChart('ps');
