@@ -991,8 +991,8 @@ function renderScList(tank){
         <span class="sc-out-lbl">Outflow ไหลออก</span>
         <div class="sc-out-inp-wrap">
           <input type="number" class="sc-out-inp" id="sod_${tank}_${s.id}"
-            value="${(s.outflow?s.outflow[5]:1.2).toFixed(1)}"
-            min="0" step="0.1"
+            value="${(s.outflow?s.outflow[5]:1.2).toFixed(2)}"
+            min="0" step="0.01"
             oninput="setScOutflow('${tank}',${s.id},parseFloat(this.value)||0)"
             placeholder="MCM/วัน">
           <span class="sc-out-unit">MCM/วัน</span>
@@ -1006,8 +1006,8 @@ function renderScList(tank){
         <span class="sc-out-lbl">ผันน้ำเติม</span>
         <div class="sc-out-inp-wrap">
           <input type="number" class="sc-out-inp" id="sex_${tank}_${s.id}"
-            value="${(Array.isArray(s.extra)?s.extra[5]:s.extra||0).toFixed(1)}"
-            min="0" step="0.1"
+            value="${(Array.isArray(s.extra)?s.extra[5]:s.extra||0).toFixed(2)}"
+            min="0" step="0.01"
             oninput="setScExtra('${tank}',${s.id},parseFloat(this.value)||0)"
             placeholder="MCM/วัน">
           <span class="sc-out-unit">MCM/วัน</span>
@@ -1734,7 +1734,7 @@ function setScOutflow(tank,scId,val){
   val=Math.max(0,parseFloat(val)||0);
   const sc=multiSc[tank].find(x=>x.id===scId);
   if(!sc) return;
-  for(let j=5;j<sc.outflow.length;j++) sc.outflow[j]=+val.toFixed(1);
+  for(let j=5;j<sc.outflow.length;j++) sc.outflow[j]=+val.toFixed(2);
   if(tank==='dk')updDK();else updPS();
 }
 
@@ -1744,7 +1744,7 @@ function setScExtra(tank,scId,val){
   const sc=multiSc[tank].find(x=>x.id===scId);
   if(!sc) return;
   if(!Array.isArray(sc.extra)) sc.extra=Array(12).fill(0);
-  for(let j=5;j<sc.extra.length;j++) sc.extra[j]=+val.toFixed(1);
+  for(let j=5;j<sc.extra.length;j++) sc.extra[j]=+val.toFixed(2);
   if(tank==='dk')updDK();else updPS();
 }
 
@@ -1774,12 +1774,12 @@ function renderPopGrid(sc,field){
     const mi=i%12;
     const val=arr[i]!=null?arr[i]:(isExtra?0:1.2);
     const isActual=i<5;
-    const step='0.1';
+    const step='0.01';
     return`<div class="op-cell ${isActual?'op-actual':'op-forecast'}">
       <div class="op-mo">${MO[mi]}</div>
       ${isActual
-        ?`<div class="op-locked">${val.toFixed(1)}<span class="op-lock-icon">🔒</span></div>`
-        :`<input type="number" class="op-inp" id="opi${i}" value="${val.toFixed(1)}" min="0" step="${step}"
+        ?`<div class="op-locked">${val.toFixed(2)}<span class="op-lock-icon">🔒</span></div>`
+        :`<input type="number" class="op-inp" id="opi${i}" value="${val.toFixed(2)}" min="0" step="${step}"
            oninput="popCascade(${i},parseFloat(this.value)||0)">`}
       <div class="op-unit">MCM/วัน</div>
       <div class="op-monthly" id="opmo${i}">${r2(val*DAYS[mi])} MCM/เดือน</div>
@@ -1802,17 +1802,17 @@ function popCascade(fromIdx,val){
   const arr=sc[_popField];
   const maxJ=Array.isArray(arr)?arr.length:12;
   for(let j=fromIdx;j<maxJ;j++){
-    arr[j]=+val.toFixed(1);
+    arr[j]=+val.toFixed(2);
     if(j>fromIdx){
       const inp=document.getElementById('opi'+j);
-      if(inp) inp.value=val.toFixed(1);
+      if(inp) inp.value=val.toFixed(2);
     }
     const mo=document.getElementById('opmo'+j);
     if(mo) mo.textContent=r2(val*DAYS[j%12])+' MCM/เดือน';
   }
   const mainId=isExtra?`sex_${_popTank}_${_popScId}`:`sod_${_popTank}_${_popScId}`;
   const mainInp=document.getElementById(mainId);
-  if(mainInp) mainInp.value=arr[5].toFixed(1);
+  if(mainInp) mainInp.value=arr[5].toFixed(2);
 }
 
 function closePopup(save){
@@ -1829,14 +1829,14 @@ function resetScOutflow(){
   if(_popField==='extra'){
     sc.extra=Array(n2).fill(0);
   } else {
-    const base=(_popTank==='dk'?THREE_OUT:PS_OUT).map((v,i)=>+(v/DAYS[i]).toFixed(1));
+    const base=(_popTank==='dk'?THREE_OUT:PS_OUT).map((v,i)=>+(v/DAYS[i]).toFixed(2));
     sc.outflow=n2===24?[...base,...base]:base;
   }
   renderPopGrid(sc,_popField);
   const isExtra=_popField==='extra';
   const mainId=isExtra?`sex_${_popTank}_${_popScId}`:`sod_${_popTank}_${_popScId}`;
   const mainInp=document.getElementById(mainId);
-  if(mainInp) mainInp.value=sc[_popField][5].toFixed(1);
+  if(mainInp) mainInp.value=sc[_popField][5].toFixed(2);
 }
 
 // ══ TABS ══
