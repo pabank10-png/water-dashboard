@@ -713,6 +713,7 @@ const THREE_MAX=318.131; let THREE_INIT=248.178;
 let THREE_ACT_JUN=152.058; // updated dynamically from data.json on load
 let PS_ACT_JUN=156.08;     // updated dynamically from data.json on load
 let _THREE_ACT_IDX=5, _PS_ACT_IDX=5; // 0-based month index of latest actual data
+let _latestDateLabel={THREE:null,PS:null}; // e.g. "29 มิ.ย. 2569", populated from data.json
 // Star position: today's fraction through the current report month
 const STAR_MONTH_IDX=5; // มิ.ย. = index 5 in MO[]
 const _dnow=new Date(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
@@ -1162,9 +1163,9 @@ function updDK(){
   document.getElementById('banner-dk').innerHTML=
     bi('ti-database','bi-b',f(THREE_INIT),'ต้นปี 3อ่าง (MCM)')+
     bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
-    bi('ti-droplet','bi-t',f(THREE_ACT_JUN)+' ('+pct(THREE_ACT_JUN,THREE_MAX)+'%)','น้ำในอ่าง ณ สิ้น'+MO[_THREE_ACT_IDX]+' '+_thY+' (MCM)')+
-    bi('ti-arrow-down','bi-g',f(ytdInDK),'น้ำไหลลงอ่างสะสม ม.ค.–'+MO[_n.getMonth()]+' '+_thY+' (MCM)')+
-    bi('ti-arrow-up','bi-r',f(ytdOutDK),'น้ำไหลออกอ่างสะสม ม.ค.–'+MO[_n.getMonth()]+' '+_thY+' (MCM)')+
+    bi('ti-droplet','bi-t',f(THREE_ACT_JUN)+' ('+pct(THREE_ACT_JUN,THREE_MAX)+'%)','น้ำในอ่าง ณ '+(_latestDateLabel.THREE||'สิ้น'+MO[_THREE_ACT_IDX]+' '+_thY)+' (MCM)')+
+    bi('ti-arrow-down','bi-g',f(ytdInDK),'น้ำไหลลงอ่างสะสม ม.ค.–'+(_latestDateLabel.THREE||MO[_n.getMonth()]+' '+_thY)+' (MCM)')+
+    bi('ti-arrow-up','bi-r',f(ytdOutDK),'น้ำไหลออกอ่างสะสม ม.ค.–'+(_latestDateLabel.THREE||MO[_n.getMonth()]+' '+_thY)+' (MCM)')+
     bi('ti-layers','bi-p',multiSc.dk.length+' scenario'+(multiSc.dk.length>1?'s':''),'Active scenarios');
 
   const allDK=multiSc.dk.map(s=>runSc('dk',s,nYears));
@@ -1318,9 +1319,9 @@ function updPS(){
   document.getElementById('banner-ps').innerHTML=
     bi('ti-database','bi-b',f(PS_INIT),'ต้นปี ประแสร์ (MCM)')+
     bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
-    bi('ti-droplet','bi-t',f(PS_ACT_JUN)+' ('+pct(PS_ACT_JUN,PS_MAX)+'%)','น้ำในอ่าง ณ สิ้น'+MO[_PS_ACT_IDX]+' '+_thYP+' (MCM)')+
-    bi('ti-arrow-down','bi-g',f(ytdInPS),'น้ำไหลลงอ่างสะสม ม.ค.–'+MO[_nP.getMonth()]+' '+_thYP+' (MCM)')+
-    bi('ti-arrow-up','bi-r',f(ytdOutPS),'น้ำไหลออกอ่างสะสม ม.ค.–'+MO[_nP.getMonth()]+' '+_thYP+' (MCM)')+
+    bi('ti-droplet','bi-t',f(PS_ACT_JUN)+' ('+pct(PS_ACT_JUN,PS_MAX)+'%)','น้ำในอ่าง ณ '+(_latestDateLabel.PS||'สิ้น'+MO[_PS_ACT_IDX]+' '+_thYP)+' (MCM)')+
+    bi('ti-arrow-down','bi-g',f(ytdInPS),'น้ำไหลลงอ่างสะสม ม.ค.–'+(_latestDateLabel.PS||MO[_nP.getMonth()]+' '+_thYP)+' (MCM)')+
+    bi('ti-arrow-up','bi-r',f(ytdOutPS),'น้ำไหลออกอ่างสะสม ม.ค.–'+(_latestDateLabel.PS||MO[_nP.getMonth()]+' '+_thYP)+' (MCM)')+
     bi('ti-layers','bi-p',multiSc.ps.length+' scenario'+(multiSc.ps.length>1?'s':''),'Active scenarios');
 
   const allPS=multiSc.ps.map(s=>runSc('ps',s,nYears));
@@ -2010,6 +2011,14 @@ async function loadData(){
   for(let i=0;i<_levPS.length;i++) if(_levPS[i]!=null) _aiPS=i;
   if(_aiTH>=0){ THREE_ACT_JUN=_levTH[_aiTH]; _THREE_ACT_IDX=_aiTH; }
   if(_aiPS>=0){ PS_ACT_JUN   =_levPS[_aiPS]; _PS_ACT_IDX  =_aiPS; }
+
+  // parse latest_date labels (e.g. "29 มิ.ย. 2569")
+  const _ldRaw = jd.latest_date || {};
+  for (const [res, ds] of Object.entries(_ldRaw)) {
+    if (!ds) continue;
+    const dt = new Date(ds + 'T00:00:00');
+    _latestDateLabel[res] = `${dt.getDate()} ${MO[dt.getMonth()]} ${dt.getFullYear() + 543}`;
+  }
 
   // populate main year dropdowns
   function _populateYrSel(selId,keys,thaiMap){

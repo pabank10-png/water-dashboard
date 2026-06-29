@@ -200,11 +200,15 @@ def read_api_monthly(csv_path):
         if inf is not None: monthly[k]["infs"].append(inf)
 
     records = []
+    latest_vol_date = {}  # reservoir → latest date string "YYYY-MM-DD"
     for (res, thai_year, month), v in monthly.items():
         level_end = None
         if v["vols"]:
-            _, lv = max(v["vols"], key=lambda x: x[0])
+            latest_dt, lv = max(v["vols"], key=lambda x: x[0])
             level_end = round(lv, 4)
+            ds = latest_dt.strftime("%Y-%m-%d")
+            if res not in latest_vol_date or ds > latest_vol_date[res]:
+                latest_vol_date[res] = ds
         outflow = round(sum(_remove_outliers(v["outs"])), 4) if v["outs"] else None
         inflow  = round(sum(_remove_outliers(v["infs"])), 4) if v["infs"] else None
         records.append({"reservoir": res, "year": thai_year, "month": month,
@@ -212,7 +216,7 @@ def read_api_monthly(csv_path):
 
     df = pd.DataFrame(records)
     print(f"✓ อ่าน API CSV: {len(df)} เดือน")
-    return df
+    return df, latest_vol_date
 
 
 # ── 3. Merge API เข้า master ──
@@ -332,7 +336,7 @@ def write_excel(df, path):
 
 
 # ── 6. เขียน data.json ──
-def write_json(df, path):
+def write_json(df, path, latest_vol_date=None):
     reservoirs = ["DK","KY","NPL","THREE","PS"]
     out = {m: {r: {} for r in reservoirs} for m in ["inflow","outflow","level_end"]}
 
@@ -351,12 +355,17 @@ def write_json(df, path):
                 if any(v is not None for v in arr):
                     out[metric][res][key] = arr
 
+    _ld = dict(latest_vol_date) if latest_vol_date else {}
+    three_dates = [_ld.get(r) for r in ["DK","KY","NPL"] if _ld.get(r)]
+    if three_dates:
+        _ld["THREE"] = min(three_dates)
     payload = {
         "generated":      datetime.now().strftime("%Y-%m-%d %H:%M"),
         "schema_version": 1,
         "inflow":    out["inflow"],
         "outflow":   out["outflow"],
         "level_end": out["level_end"],
+        "latest_date": _ld,
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -381,7 +390,7 @@ if __name__ == "__main__":
 
     # 2. อ่าน API
     print(f"\nอ่าน API CSV:")
-    df_api = read_api_monthly(API_HIST_CSV)
+    df_api, latest_vol_date = read_api_monthly(API_HIST_CSV)
 
     # 3. Merge API — เติมเฉพาะช่องที่ยังว่าง + เดือนปัจจุบัน (2569)
     print(f"\nMerge API:")
@@ -395,7 +404,7 @@ if __name__ == "__main__":
     # 5 & 6. เขียน output
     print()
     write_excel(df, MASTER_XLSX)
-    write_json(df, OUTPUT_JSON)
+    write_json(df, OUTPUT_JSON, latest_vol_date)
     if OUTPUT_JSON2:
         import shutil
         shutil.copy2(OUTPUT_JSON, OUTPUT_JSON2)
