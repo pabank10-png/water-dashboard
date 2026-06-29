@@ -1158,8 +1158,11 @@ function updDK(){
   const p0=pct(THREE_INIT,THREE_MAX);
 
   const _n=new Date(),_thY=_n.getFullYear()+543,_dl=_n.getDate()+' '+MO[_n.getMonth()]+' '+_thY;
-  const ytdInDK=r2(data.slice(0,6).reduce((s,d)=>s+d.inflow,0));
-  const ytdOutDK=r2(data.slice(0,6).reduce((s,d)=>s+d.outflow,0));
+  const _yrK='y'+String(_thY).slice(-2);
+  const _infTH=((jd&&jd.inflow&&jd.inflow.THREE)||{})[_yrK]||[];
+  const _outTH=((jd&&jd.outflow&&jd.outflow.THREE)||{})[_yrK]||[];
+  let _sIn=0,_sOut=0;for(let i=0;i<=_THREE_ACT_IDX;i++){if(_infTH[i]!=null)_sIn+=_infTH[i];if(_outTH[i]!=null)_sOut+=_outTH[i];}
+  const ytdInDK=r2(_sIn),ytdOutDK=r2(_sOut);
   document.getElementById('banner-dk').innerHTML=
     bi('ti-database','bi-b',f(THREE_INIT),'ต้นปี 3อ่าง (MCM)')+
     bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
@@ -1180,7 +1183,8 @@ function updDK(){
   }).join('');
 
   const n=12*nYears;
-  const actualLine=data.map(d=>d.isAct?d.end:null);
+  const _levTHR3=((jd?.level_end?.THREE)||{})[_yrK]||[];
+  const actualLine=data.map((d,i)=>i<_THREE_ACT_IDX?(_levTHR3[i]??null):null);
   const bands=mkBands(DK_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
 
@@ -1314,8 +1318,11 @@ function updPS(){
   const p0=pct(PS_INIT,PS_MAX);
 
   const _nP=new Date(),_thYP=_nP.getFullYear()+543,_dlP=_nP.getDate()+' '+MO[_nP.getMonth()]+' '+_thYP;
-  const ytdInPS=r2(data.slice(0,6).reduce((s,d)=>s+d.inflow,0));
-  const ytdOutPS=r2(data.slice(0,6).reduce((s,d)=>s+d.outflow,0));
+  const _yrKP='y'+String(_thYP).slice(-2);
+  const _infPS2=((jd&&jd.inflow&&jd.inflow.PS)||{})[_yrKP]||[];
+  const _outPS2=((jd&&jd.outflow&&jd.outflow.PS)||{})[_yrKP]||[];
+  let _sInP=0,_sOutP=0;for(let i=0;i<=_PS_ACT_IDX;i++){if(_infPS2[i]!=null)_sInP+=_infPS2[i];if(_outPS2[i]!=null)_sOutP+=_outPS2[i];}
+  const ytdInPS=r2(_sInP),ytdOutPS=r2(_sOutP);
   document.getElementById('banner-ps').innerHTML=
     bi('ti-database','bi-b',f(PS_INIT),'ต้นปี ประแสร์ (MCM)')+
     bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
@@ -1335,7 +1342,8 @@ function updPS(){
   }).join('');
 
   const n=12*nYears;
-  const actualLine=data.map(d=>d.isAct?d.end:null);
+  const _levPS3=((jd?.level_end?.PS)||{})[_yrKP]||[];
+  const actualLine=data.map((d,i)=>i<_PS_ACT_IDX?(_levPS3[i]??null):null);
   const psBands=mkBands(PS_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
 
