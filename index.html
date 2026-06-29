@@ -1184,7 +1184,7 @@ function updDK(){
 
   const n=12*nYears;
   const _levTHR3=((jd?.level_end?.THREE)||{})[_yrK]||[];
-  const actualLine=data.map((d,i)=>i<_THREE_ACT_IDX?(_levTHR3[i]??null):null);
+  const actualLine=data.map((d,i)=>i<_THREE_ACT_IDX?(_levTHR3[i]??null):(i===_THREE_ACT_IDX?THREE_ACT_JUN:null));
   const bands=mkBands(DK_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
 
@@ -1343,7 +1343,7 @@ function updPS(){
 
   const n=12*nYears;
   const _levPS3=((jd?.level_end?.PS)||{})[_yrKP]||[];
-  const actualLine=data.map((d,i)=>i<_PS_ACT_IDX?(_levPS3[i]??null):null);
+  const actualLine=data.map((d,i)=>i<_PS_ACT_IDX?(_levPS3[i]??null):(i===_PS_ACT_IDX?PS_ACT_JUN:null));
   const psBands=mkBands(PS_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
 
@@ -1918,8 +1918,8 @@ function toggleNight(){
 }
 
 // ══ LOAD DATA FROM data.json ══
+let jd; // module-level so updDK/updPS can access it
 async function loadData(){
-  let jd;
   try{
     if(window._DATA_INLINE){jd=window._DATA_INLINE;}
     else{const r=await fetch('data.json');jd=await r.json();}
