@@ -143,6 +143,7 @@ body::before{
 .bi-p{background:var(--purple-bg);color:var(--purple)}
 .bv{font-size:18px;font-weight:800;color:var(--text);line-height:1}
 .bl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+.bs{font-size:10px;color:var(--text3);margin-top:2px;opacity:.85;}
 
 /* ── GAUGE ROW ── */
 .gauge-row{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
@@ -712,6 +713,7 @@ let THREE_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
 const THREE_MAX=318.131; let THREE_INIT=248.178;
 let THREE_ACT_JUN=152.058; // updated dynamically from data.json on load
 let PS_ACT_JUN=156.08;     // updated dynamically from data.json on load
+let DK_ACT_JUN=0, KY_ACT_JUN=0, NPL_ACT_JUN=0; // individual reservoir levels, updated from data.json
 let _THREE_ACT_IDX=5, _PS_ACT_IDX=5; // 0-based month index of latest actual data
 let _latestDateLabel={THREE:null,PS:null}; // e.g. "29 มิ.ย. 2569", populated from data.json
 // Star position: today's fraction through the current report month
@@ -1089,7 +1091,7 @@ function gauge(m,val,max,tag){
 }
 
 // ══ BANNER ══
-function bi(icon,cls,val,lbl){return`<div class="banner-item"><div class="bi ${cls}"><i class="ti ${icon}" aria-hidden="true"></i></div><div><div class="bv">${val}</div><div class="bl">${lbl}</div></div></div>`;}
+function bi(icon,cls,val,lbl,sub){return`<div class="banner-item"><div class="bi ${cls}"><i class="ti ${icon}" aria-hidden="true"></i></div><div><div class="bv">${val}</div><div class="bl">${lbl}</div>${sub?`<div class="bs">${sub}</div>`:''}</div></div>`;}
 
 // ══ TABLE ══
 function mkTbl(data,max,crit){
@@ -1166,7 +1168,7 @@ function updDK(){
   document.getElementById('banner-dk').innerHTML=
     bi('ti-database','bi-b',f(THREE_INIT),'ต้นปี 3อ่าง (MCM)')+
     bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
-    bi('ti-droplet','bi-t',f(THREE_ACT_JUN)+' ('+pct(THREE_ACT_JUN,THREE_MAX)+'%)','น้ำในอ่าง ณ '+(_latestDateLabel.THREE||'สิ้น'+MO[_THREE_ACT_IDX]+' '+_thY)+' (MCM)')+
+    bi('ti-droplet','bi-t',f(THREE_ACT_JUN)+' ('+pct(THREE_ACT_JUN,THREE_MAX)+'%)','น้ำในอ่าง ณ '+(_latestDateLabel.THREE||'สิ้น'+MO[_THREE_ACT_IDX]+' '+_thY)+' (MCM)','DK '+f(DK_ACT_JUN)+' · KY '+f(KY_ACT_JUN)+' · NPL '+f(NPL_ACT_JUN))+
     bi('ti-arrow-down','bi-g',f(ytdInDK),'น้ำไหลลงอ่างสะสม ม.ค.–'+(_latestDateLabel.THREE||MO[_n.getMonth()]+' '+_thY)+' (MCM)')+
     bi('ti-arrow-up','bi-r',f(ytdOutDK),'น้ำไหลออกอ่างสะสม ม.ค.–'+(_latestDateLabel.THREE||MO[_n.getMonth()]+' '+_thY)+' (MCM)')+
     bi('ti-layers','bi-p',multiSc.dk.length+' scenario'+(multiSc.dk.length>1?'s':''),'Active scenarios');
@@ -1206,7 +1208,7 @@ function updDK(){
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
+      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
       scales:{y:{min:0,max:THREE_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}
     },
   plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='★ Actual'||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
@@ -1361,7 +1363,7 @@ function updPS(){
     {label:'★ Actual',data:actualLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:.35,borderWidth:2.5,pointRadius:actualLine.map(v=>v!=null?4:0),pointBackgroundColor:_al(),pointBorderColor:'#fff',pointBorderWidth:2,order:0,_actJun:PS_ACT_JUN},
     {label:'Max cap.',data:Array(n).fill(295),borderColor:'rgba(201,42,42,.4)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,order:99}
   ]},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
+    plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
     scales:{y:{min:0,max:PS_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}},
   plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='★ Actual'||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
 });
@@ -2019,6 +2021,15 @@ async function loadData(){
   for(let i=0;i<_levPS.length;i++) if(_levPS[i]!=null) _aiPS=i;
   if(_aiTH>=0){ THREE_ACT_JUN=_levTH[_aiTH]; _THREE_ACT_IDX=_aiTH; }
   if(_aiPS>=0){ PS_ACT_JUN   =_levPS[_aiPS]; _PS_ACT_IDX  =_aiPS; }
+  // individual DK/KY/NPL levels
+  const _levDK=(lev.DK||{})[_curYrKey]||[], _levKY=(lev.KY||{})[_curYrKey]||[], _levNPL=(lev.NPL||{})[_curYrKey]||[];
+  let _aiDK=-1,_aiKY=-1,_aiNPL=-1;
+  for(let i=0;i<_levDK.length;i++) if(_levDK[i]!=null) _aiDK=i;
+  for(let i=0;i<_levKY.length;i++) if(_levKY[i]!=null) _aiKY=i;
+  for(let i=0;i<_levNPL.length;i++) if(_levNPL[i]!=null) _aiNPL=i;
+  if(_aiDK>=0) DK_ACT_JUN=_levDK[_aiDK];
+  if(_aiKY>=0) KY_ACT_JUN=_levKY[_aiKY];
+  if(_aiNPL>=0) NPL_ACT_JUN=_levNPL[_aiNPL];
 
   // parse latest_date labels (e.g. "29 มิ.ย. 2569")
   const _ldRaw = jd.latest_date || {};
