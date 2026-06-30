@@ -2,7 +2,8 @@ name: Update Water Data
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *'   # 09:00 Thai time (UTC+7)
+    - cron: '0 5 * * *'   # 12:00 Thai time (UTC+7)
   workflow_dispatch:
 
 jobs:
