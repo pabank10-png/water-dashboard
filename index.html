@@ -143,6 +143,7 @@ body::before{
 .bi-p{background:var(--purple-bg);color:var(--purple)}
 .bv{font-size:18px;font-weight:800;color:var(--text);line-height:1}
 .bl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+.bs{font-size:10px;color:var(--text3);margin-top:2px;opacity:.85;}
 
 /* ── GAUGE ROW ── */
 .gauge-row{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
@@ -710,12 +711,16 @@ let THREE_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
 // KY: MAX=51.1, INIT=25.573, out=[13.64,12.32,13.64,13.2,13.64,13.2,13.64,13.64,13.2,13.64,13.2,13.64]
 // NPL: MAX=187.62, INIT=148.64, out=[22.63,20.44,22.63,21.9,22.63,21.9,22.63,22.63,21.9,22.63,21.9,22.63]
 const THREE_MAX=318.131; let THREE_INIT=248.178;
-let THREE_ACT_JUN=152.058; // updated dynamically from data.json on load
-let PS_ACT_JUN=156.08;     // updated dynamically from data.json on load
-let _THREE_ACT_IDX=5, _PS_ACT_IDX=5; // 0-based month index of latest actual data
-// Star position: today's fraction through the current report month
-const STAR_MONTH_IDX=5; // มิ.ย. = index 5 in MO[]
-const _dnow=new Date(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
+let THREE_ACT_JUN=152.058; // level at last COMPLETE month's end (for chart dot/star) — updated dynamically
+let PS_ACT_JUN=156.08;
+let THREE_TODAY_LVL=152.058; // today's actual level (for banner + simulation anchor of current month)
+let PS_TODAY_LVL=156.08;
+let DK_ACT_JUN=0, KY_ACT_JUN=0, NPL_ACT_JUN=0; // individual reservoir levels, updated from data.json
+let _THREE_ACT_IDX=5, _PS_ACT_IDX=5; // last COMPLETE month index (= STAR_MONTH_IDX-1)
+let _THREE_LATEST_IDX=5, _PS_LATEST_IDX=5; // latest slot with ANY actual data (incl. partial current month)
+let _latestDateLabel={THREE:null,PS:null}; // e.g. "29 มิ.ย. 2569", populated from data.json
+// Star position: current calendar month (dynamic — auto-updates, no hardcoding needed)
+const _dnow=new Date(), STAR_MONTH_IDX=_dnow.getMonth(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
 const THREE_OUT=[37.20,33.63,37.20,36.00,37.20,35.76,37.20,37.20,36.00,37.20,36.00,37.20];
 let KY_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
 let NPL_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
@@ -951,6 +956,7 @@ function renderScList(tank){
   const SRCS=tank==='dk'?DK_SRCS:PS_SRCS;
   const addBtn=document.getElementById(tank+'-add-sc');
   if(addBtn) addBtn.style.display=multiSc[tank].length>=4?'none':'inline-flex';
+  const _actIdx=tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX;
   document.getElementById(tank+'-sc-list').innerHTML=multiSc[tank].map(s=>`
     <div class="sc-row">
       <div class="sc-row-head">
@@ -970,7 +976,7 @@ function renderScList(tank){
         ${multiSc[tank].length>1?`<button class="sc-rm" onclick="rmSc('${tank}',${s.id})">✕</button>`:''}
       </div>
       <div class="sc-months">
-        ${MO.map((m,i)=>i<5?
+        ${MO.map((m,i)=>i<=(tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX)?
           `<div class="sc-mo actual"><span class="sc-mo-lbl">${m}</span><span class="mo-act-tag">Actual</span></div>`:
           `<div class="sc-mo"><span class="sc-mo-lbl">${m}</span>
            <select onchange="(function(v){const sc=multiSc['${tank}'].find(x=>x.id===${s.id});for(let j=${i};j<12;j++)sc.srcs[j]=v;renderScList('${tank}');if('${tank}'==='dk')updDK();else updPS();})(this.value)">
@@ -992,13 +998,13 @@ function renderScList(tank){
         <span class="sc-out-lbl">Outflow ไหลออก</span>
         <div class="sc-out-inp-wrap">
           <input type="number" class="sc-out-inp" id="sod_${tank}_${s.id}"
-            value="${(s.outflow?s.outflow[5]:1.2).toFixed(2)}"
+            value="${(s.outflow?s.outflow[_actIdx+1]:1.2).toFixed(2)}"
             min="0" step="0.01"
             oninput="setScOutflow('${tank}',${s.id},parseFloat(this.value)||0)"
             placeholder="MCM/วัน">
           <span class="sc-out-unit">MCM/วัน</span>
         </div>
-        <span class="sc-out-hint">(มิ.ย.→ ธ.ค.)</span>
+        <span class="sc-out-hint">(${MO[_actIdx+1]}→ ธ.ค.)</span>
         <button class="sc-out-btn" onclick="openOutflowPopup('${tank}',${s.id})">
           <i class="ti ti-table-options" aria-hidden="true"></i> ปรับรายเดือน
         </button>
@@ -1007,13 +1013,13 @@ function renderScList(tank){
         <span class="sc-out-lbl">ผันน้ำเติม</span>
         <div class="sc-out-inp-wrap">
           <input type="number" class="sc-out-inp" id="sex_${tank}_${s.id}"
-            value="${(Array.isArray(s.extra)?s.extra[5]:s.extra||0).toFixed(2)}"
+            value="${(Array.isArray(s.extra)?s.extra[_actIdx+1]:s.extra||0).toFixed(2)}"
             min="0" step="0.01"
             oninput="setScExtra('${tank}',${s.id},parseFloat(this.value)||0)"
             placeholder="MCM/วัน">
           <span class="sc-out-unit">MCM/วัน</span>
         </div>
-        <span class="sc-out-hint">(มิ.ย.→ ธ.ค.)</span>
+        <span class="sc-out-hint">(${MO[_actIdx+1]}→ ธ.ค.)</span>
         <button class="sc-out-btn" style="border-color:var(--purple);color:var(--purple)" onclick="openExtraPopup('${tank}',${s.id})">
           <i class="ti ti-table-options" aria-hidden="true"></i> ปรับรายเดือน
         </button>
@@ -1030,7 +1036,8 @@ function runSc(tank,s,nYears=1){
   const extraArr=Array.isArray(s.extra)?s.extra:Array(12).fill(s.extra||0);
   const MAX=tank==='dk'?THREE_MAX:PS_MAX;
   const INIT=tank==='dk'?THREE_INIT:PS_INIT;
-  const ACT_JUN=tank==='dk'?THREE_ACT_JUN:PS_ACT_JUN;
+  const ACT_JUN=tank==='dk'?THREE_ACT_JUN:PS_ACT_JUN;   // สิ้นเดือนล่าสุด (chart anchor)
+  const TODAY_LVL=tank==='dk'?THREE_TODAY_LVL:PS_TODAY_LVL; // วันนี้จริง (anchor simulation เดือนปัจจุบัน)
   const ACT_IDX=tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX;
   const n=12*nYears;
   // Helper: get outflow MCM for absolute month index i (uses DAYS[mi] for conversion)
@@ -1041,14 +1048,23 @@ function runSc(tank,s,nYears=1){
   for(let i=0;i<n;i++){
     const mi=i%12;
     const isAct=i<ACT_IDX;
-    if(i===ACT_IDX){ // actual month Y1 anchor (dynamic)
-      const rem=1-STAR_PROGRESS;
-      const srcInf=INF[getSrc(ACT_IDX)]||INF[Object.keys(INF)[0]];
-      const in_=r2(srcInf[ACT_IDX]*s.mult*rem);
-      const ex=r2(getEx(ACT_IDX)*rem);
+    if(i===ACT_IDX){ // เดือนสุดท้ายที่จบแล้ว — pass-through (rem=0 เพราะผ่านมาแล้ว)
+      const rem=0; // ACT_IDX = last complete month → เดือนนี้จบแล้ว ไม่ต้องคำนวณ
       const out5=getOut(ACT_IDX);
-      const end=r2(Math.min(MAX,Math.max(0,ACT_JUN+in_+ex-out5*rem)));
-      res.push({m:MO[ACT_IDX],begin:ACT_JUN,inflow:in_,extra:ex,outflow:r2(out5*rem),end,isAct:false,yr:0});
+      const end=r2(Math.min(MAX,Math.max(0,ACT_JUN+0+0-out5*rem)));
+      res.push({m:MO[ACT_IDX],begin:ACT_JUN,inflow:0,extra:0,outflow:0,end:ACT_JUN,isAct:false,yr:0});
+      cur=ACT_JUN;continue;
+    }
+    else if(i===STAR_MONTH_IDX&&i>ACT_IDX&&i<12){ // เดือนปัจจุบัน (ยังไม่จบ) — partial rem
+      // ใช้ TODAY_LVL (ระดับน้ำวันนี้จริง) เป็น anchor แทน cur (สิ้นเดือนก่อน)
+      // เพราะ 8 ส.ค. เราวัดได้จริง → forecast เฉพาะวันที่เหลือ (rem = 23/31)
+      const rem=Math.max(0,1-STAR_PROGRESS);
+      const srcInf=INF[getSrc(i)]||INF[Object.keys(INF)[0]];
+      const in_=r2(srcInf[mi]*s.mult*rem);
+      const ex=r2(getEx(i)*rem);
+      const out_=getOut(i);
+      const end=r2(Math.min(MAX,Math.max(0,TODAY_LVL+in_+ex-out_*rem)));
+      res.push({m:MO[mi],begin:r2(TODAY_LVL),inflow:in_,extra:ex,outflow:r2(out_*rem),end,isAct:false,yr:0});
       cur=end;continue;
     }
     const srcInf=INF[getSrc(i)]||INF[Object.keys(INF)[0]];
@@ -1088,7 +1104,7 @@ function gauge(m,val,max,tag){
 }
 
 // ══ BANNER ══
-function bi(icon,cls,val,lbl){return`<div class="banner-item"><div class="bi ${cls}"><i class="ti ${icon}" aria-hidden="true"></i></div><div><div class="bv">${val}</div><div class="bl">${lbl}</div></div></div>`;}
+function bi(icon,cls,val,lbl,sub){return`<div class="banner-item"><div class="bi ${cls}"><i class="ti ${icon}" aria-hidden="true"></i></div><div><div class="bv">${val}</div><div class="bl">${lbl}</div>${sub?`<div class="bs">${sub}</div>`:''}</div></div>`;}
 
 // ══ TABLE ══
 function mkTbl(data,max,crit){
@@ -1157,14 +1173,17 @@ function updDK(){
   const p0=pct(THREE_INIT,THREE_MAX);
 
   const _n=new Date(),_thY=_n.getFullYear()+543,_dl=_n.getDate()+' '+MO[_n.getMonth()]+' '+_thY;
-  const ytdInDK=r2(data.slice(0,6).reduce((s,d)=>s+d.inflow,0));
-  const ytdOutDK=r2(data.slice(0,6).reduce((s,d)=>s+d.outflow,0));
+  const _yrK='y'+String(_thY).slice(-2);
+  const _infTH=((jd&&jd.inflow&&jd.inflow.THREE)||{})[_yrK]||[];
+  const _outTH=((jd&&jd.outflow&&jd.outflow.THREE)||{})[_yrK]||[];
+  let _sIn=0,_sOut=0;for(let i=0;i<=_THREE_LATEST_IDX;i++){if(_infTH[i]!=null)_sIn+=_infTH[i];if(_outTH[i]!=null)_sOut+=_outTH[i];}
+  const ytdInDK=r2(_sIn),ytdOutDK=r2(_sOut);
   document.getElementById('banner-dk').innerHTML=
     bi('ti-database','bi-b',f(THREE_INIT),'ต้นปี 3อ่าง (MCM)')+
     bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
-    bi('ti-droplet','bi-t',f(THREE_ACT_JUN)+' ('+pct(THREE_ACT_JUN,THREE_MAX)+'%)','น้ำในอ่าง ณ สิ้น'+MO[_THREE_ACT_IDX]+' '+_thY+' (MCM)')+
-    bi('ti-arrow-down','bi-g',f(ytdInDK),'น้ำไหลลงอ่างสะสม ม.ค.–'+MO[_n.getMonth()]+' '+_thY+' (MCM)')+
-    bi('ti-arrow-up','bi-r',f(ytdOutDK),'น้ำไหลออกอ่างสะสม ม.ค.–'+MO[_n.getMonth()]+' '+_thY+' (MCM)')+
+    bi('ti-droplet','bi-t',f(THREE_TODAY_LVL)+' ('+pct(THREE_TODAY_LVL,THREE_MAX)+'%)','น้ำในอ่าง ณ '+(_latestDateLabel.THREE||'สิ้น'+MO[_THREE_ACT_IDX]+' '+_thY)+' (MCM)','DK '+f(DK_ACT_JUN)+' · KY '+f(KY_ACT_JUN)+' · NPL '+f(NPL_ACT_JUN))+
+    bi('ti-arrow-down','bi-g',f(ytdInDK),'น้ำไหลลงอ่างสะสม ม.ค.–'+(_latestDateLabel.THREE||MO[_n.getMonth()]+' '+_thY)+' (MCM)')+
+    bi('ti-arrow-up','bi-r',f(ytdOutDK),'น้ำไหลออกอ่างสะสม ม.ค.–'+(_latestDateLabel.THREE||MO[_n.getMonth()]+' '+_thY)+' (MCM)')+
     bi('ti-layers','bi-p',multiSc.dk.length+' scenario'+(multiSc.dk.length>1?'s':''),'Active scenarios');
 
   const allDK=multiSc.dk.map(s=>runSc('dk',s,nYears));
@@ -1179,15 +1198,16 @@ function updDK(){
   }).join('');
 
   const n=12*nYears;
-  const actualLine=data.map(d=>d.isAct?d.end:null);
+  const _levTHR3=((jd?.level_end?.THREE)||{})[_yrK]||[];
+  const actualLine=data.map((d,i)=>i<_THREE_ACT_IDX?(_levTHR3[i]??null):(i===_THREE_ACT_IDX?THREE_ACT_JUN:null));
   const bands=mkBands(DK_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
 
   const scDatasets=multiSc.dk.map((s,si)=>{
     const sData=si===0?data:runSc('dk',s,nYears);
-    const fcastLine=sData.map((d,i)=>i<5?null:d.end);
+    const fcastLine=sData.map((d,i)=>i<_THREE_ACT_IDX?null:d.end); // เริ่มจาก ACT_IDX เพื่อเชื่อมกับดาว
     return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.35,borderWidth:2.5,
-      pointRadius:fcastLine.map((v,i)=>v!=null&&i>5?4:i===5?5:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
+      pointRadius:fcastLine.map((v,i)=>v!=null?4:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
   });
 
   kc('dklv');
@@ -1196,12 +1216,12 @@ function updDK(){
     data:{labels,datasets:[
       ...bands,
       ...scDatasets,
-      {label:'★ Actual',data:actualLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:.35,borderWidth:2.5,pointRadius:actualLine.map(v=>v!=null?4:0),pointBackgroundColor:_al(),pointBorderColor:'#fff',pointBorderWidth:2,order:0,_actJun:THREE_ACT_JUN},
+      {label:'★ Actual',data:actualLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:.35,borderWidth:2.5,pointRadius:actualLine.map(v=>v!=null?4:0),pointBackgroundColor:_al(),pointBorderColor:'#fff',pointBorderWidth:2,order:0,_actJun:THREE_TODAY_LVL},
       {label:'Max cap.',data:Array(n).fill(THREE_MAX),borderColor:'rgba(201,42,42,.4)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,order:99}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
+      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
       scales:{y:{min:0,max:THREE_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}
     },
   plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='★ Actual'||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
@@ -1313,14 +1333,17 @@ function updPS(){
   const p0=pct(PS_INIT,PS_MAX);
 
   const _nP=new Date(),_thYP=_nP.getFullYear()+543,_dlP=_nP.getDate()+' '+MO[_nP.getMonth()]+' '+_thYP;
-  const ytdInPS=r2(data.slice(0,6).reduce((s,d)=>s+d.inflow,0));
-  const ytdOutPS=r2(data.slice(0,6).reduce((s,d)=>s+d.outflow,0));
+  const _yrKP='y'+String(_thYP).slice(-2);
+  const _infPS2=((jd&&jd.inflow&&jd.inflow.PS)||{})[_yrKP]||[];
+  const _outPS2=((jd&&jd.outflow&&jd.outflow.PS)||{})[_yrKP]||[];
+  let _sInP=0,_sOutP=0;for(let i=0;i<=_PS_LATEST_IDX;i++){if(_infPS2[i]!=null)_sInP+=_infPS2[i];if(_outPS2[i]!=null)_sOutP+=_outPS2[i];}
+  const ytdInPS=r2(_sInP),ytdOutPS=r2(_sOutP);
   document.getElementById('banner-ps').innerHTML=
     bi('ti-database','bi-b',f(PS_INIT),'ต้นปี ประแสร์ (MCM)')+
     bi('ti-chart-pie','bi-b',p0+'%','% ความจุ ต้นปี')+
-    bi('ti-droplet','bi-t',f(PS_ACT_JUN)+' ('+pct(PS_ACT_JUN,PS_MAX)+'%)','น้ำในอ่าง ณ สิ้น'+MO[_PS_ACT_IDX]+' '+_thYP+' (MCM)')+
-    bi('ti-arrow-down','bi-g',f(ytdInPS),'น้ำไหลลงอ่างสะสม ม.ค.–'+MO[_nP.getMonth()]+' '+_thYP+' (MCM)')+
-    bi('ti-arrow-up','bi-r',f(ytdOutPS),'น้ำไหลออกอ่างสะสม ม.ค.–'+MO[_nP.getMonth()]+' '+_thYP+' (MCM)')+
+    bi('ti-droplet','bi-t',f(PS_TODAY_LVL)+' ('+pct(PS_TODAY_LVL,PS_MAX)+'%)','น้ำในอ่าง ณ '+(_latestDateLabel.PS||'สิ้น'+MO[_PS_ACT_IDX]+' '+_thYP)+' (MCM)')+
+    bi('ti-arrow-down','bi-g',f(ytdInPS),'น้ำไหลลงอ่างสะสม ม.ค.–'+(_latestDateLabel.PS||MO[_nP.getMonth()]+' '+_thYP)+' (MCM)')+
+    bi('ti-arrow-up','bi-r',f(ytdOutPS),'น้ำไหลออกอ่างสะสม ม.ค.–'+(_latestDateLabel.PS||MO[_nP.getMonth()]+' '+_thYP)+' (MCM)')+
     bi('ti-layers','bi-p',multiSc.ps.length+' scenario'+(multiSc.ps.length>1?'s':''),'Active scenarios');
 
   const allPS=multiSc.ps.map(s=>runSc('ps',s,nYears));
@@ -1334,25 +1357,26 @@ function updPS(){
   }).join('');
 
   const n=12*nYears;
-  const actualLine=data.map(d=>d.isAct?d.end:null);
+  const _levPS3=((jd?.level_end?.PS)||{})[_yrKP]||[];
+  const actualLine=data.map((d,i)=>i<_PS_ACT_IDX?(_levPS3[i]??null):(i===_PS_ACT_IDX?PS_ACT_JUN:null));
   const psBands=mkBands(PS_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
 
   const scDatasets=multiSc.ps.map((s,si)=>{
     const sData=si===0?data:runSc('ps',s,nYears);
-    const fcastLine=sData.map((d,i)=>i<5?null:d.end);
+    const fcastLine=sData.map((d,i)=>i<_PS_ACT_IDX?null:d.end); // เริ่มจาก ACT_IDX เพื่อเชื่อมกับดาว
     return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.3,borderWidth:2.5,
-      pointRadius:fcastLine.map((v,i)=>v!=null&&i>5?3:i===5?5:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
+      pointRadius:fcastLine.map((v,i)=>v!=null?3:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
   });
 
   kc('pslv');
   CH['pslv']=new Chart(document.getElementById('c-ps-lv'),{type:'line',data:{labels,datasets:[
     ...psBands,
     ...scDatasets,
-    {label:'★ Actual',data:actualLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:.35,borderWidth:2.5,pointRadius:actualLine.map(v=>v!=null?4:0),pointBackgroundColor:_al(),pointBorderColor:'#fff',pointBorderWidth:2,order:0,_actJun:PS_ACT_JUN},
+    {label:'★ Actual',data:actualLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:.35,borderWidth:2.5,pointRadius:actualLine.map(v=>v!=null?4:0),pointBackgroundColor:_al(),pointBorderColor:'#fff',pointBorderWidth:2,order:0,_actJun:PS_TODAY_LVL},
     {label:'Max cap.',data:Array(n).fill(295),borderColor:'rgba(201,42,42,.4)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,order:99}
   ]},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
+    plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
     scales:{y:{min:0,max:PS_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}},
   plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='★ Actual'||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
 });
@@ -1736,7 +1760,7 @@ function setScOutflow(tank,scId,val){
   val=Math.max(0,parseFloat(val)||0);
   const sc=multiSc[tank].find(x=>x.id===scId);
   if(!sc) return;
-  for(let j=5;j<sc.outflow.length;j++) sc.outflow[j]=+val.toFixed(2);
+  for(let j=(tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX)+1;j<sc.outflow.length;j++) sc.outflow[j]=+val.toFixed(2);
   if(tank==='dk')updDK();else updPS();
 }
 
@@ -1746,7 +1770,7 @@ function setScExtra(tank,scId,val){
   const sc=multiSc[tank].find(x=>x.id===scId);
   if(!sc) return;
   if(!Array.isArray(sc.extra)) sc.extra=Array(12).fill(0);
-  for(let j=5;j<sc.extra.length;j++) sc.extra[j]=+val.toFixed(2);
+  for(let j=(tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX)+1;j<sc.extra.length;j++) sc.extra[j]=+val.toFixed(2);
   if(tank==='dk')updDK();else updPS();
 }
 
@@ -1759,9 +1783,11 @@ function _openPopup(tank,scId,field){
   if(!sc) return;
   const isExtra=field==='extra';
   document.getElementById('op-title').textContent=sc.label+(isExtra?' — ปรับผันน้ำเติมรายวัน':' — ปรับ Outflow รายวัน');
+  const _actIdx=tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX;
+  const _actLbl='ม.ค.–'+MO[_actIdx], _fctLbl=MO[_actIdx+1]+'–ธ.ค.';
   document.getElementById('op-subtitle').textContent=isExtra
-    ?'ม.ค.–พ.ค. = ไม่มีการผันน้ำ (ล็อก 0) · มิ.ย.–ธ.ค. = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ'
-    :'ม.ค.–พ.ค. = Actual (ล็อก) · มิ.ย.–ธ.ค. = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ';
+    ?_actLbl+' = ไม่มีการผันน้ำ (ล็อก 0) · '+_fctLbl+' = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ'
+    :_actLbl+' = Actual (ล็อก) · '+_fctLbl+' = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ';
   renderPopGrid(sc,field);
   document.getElementById('op-overlay').classList.add('open');
 }
@@ -1775,7 +1801,7 @@ function renderPopGrid(sc,field){
   function mkCell(i){
     const mi=i%12;
     const val=arr[i]!=null?arr[i]:(isExtra?0:1.2);
-    const isActual=i<5;
+    const isActual=i<=(_popTank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX);
     const step='0.01';
     return`<div class="op-cell ${isActual?'op-actual':'op-forecast'}">
       <div class="op-mo">${MO[mi]}</div>
@@ -1909,8 +1935,8 @@ function toggleNight(){
 }
 
 // ══ LOAD DATA FROM data.json ══
+let jd; // module-level so updDK/updPS can access it
 async function loadData(){
-  let jd;
   try{
     if(window._DATA_INLINE){jd=window._DATA_INLINE;}
     else{const r=await fetch('data.json');jd=await r.json();}
@@ -2008,8 +2034,38 @@ async function loadData(){
   let _aiTH=-1,_aiPS=-1;
   for(let i=0;i<_levTH.length;i++) if(_levTH[i]!=null) _aiTH=i;
   for(let i=0;i<_levPS.length;i++) if(_levPS[i]!=null) _aiPS=i;
-  if(_aiTH>=0){ THREE_ACT_JUN=_levTH[_aiTH]; _THREE_ACT_IDX=_aiTH; }
-  if(_aiPS>=0){ PS_ACT_JUN   =_levPS[_aiPS]; _PS_ACT_IDX  =_aiPS; }
+  // ACT_IDX = เดือนสุดท้ายที่จบสมบูรณ์ = เดือนปัจจุบัน - 1 (ต้องตั้งก่อนเพื่อใช้ index ด้านล่าง)
+  _THREE_ACT_IDX=Math.max(0,STAR_MONTH_IDX-1);
+  _PS_ACT_IDX   =Math.max(0,STAR_MONTH_IDX-1);
+  // THREE_ACT_JUN = ระดับน้ำสิ้นเดือนล่าสุดที่สมบูรณ์ (สำหรับ chart dot/star)
+  // THREE_TODAY_LVL = ระดับน้ำวันนี้จริงๆ (สำหรับ banner + anchor simulation เดือนปัจจุบัน)
+  if(_aiTH>=0){
+    THREE_TODAY_LVL=_levTH[_aiTH];
+    THREE_ACT_JUN=(_levTH[_THREE_ACT_IDX]!=null)?_levTH[_THREE_ACT_IDX]:THREE_TODAY_LVL;
+    _THREE_LATEST_IDX=_aiTH; // slot ล่าสุดที่มีข้อมูลจริง (รวม partial เดือนปัจจุบัน)
+  }
+  if(_aiPS>=0){
+    PS_TODAY_LVL=_levPS[_aiPS];
+    PS_ACT_JUN=(_levPS[_PS_ACT_IDX]!=null)?_levPS[_PS_ACT_IDX]:PS_TODAY_LVL;
+    _PS_LATEST_IDX=_aiPS;
+  }
+  // individual DK/KY/NPL levels
+  const _levDK=(lev.DK||{})[_curYrKey]||[], _levKY=(lev.KY||{})[_curYrKey]||[], _levNPL=(lev.NPL||{})[_curYrKey]||[];
+  let _aiDK=-1,_aiKY=-1,_aiNPL=-1;
+  for(let i=0;i<_levDK.length;i++) if(_levDK[i]!=null) _aiDK=i;
+  for(let i=0;i<_levKY.length;i++) if(_levKY[i]!=null) _aiKY=i;
+  for(let i=0;i<_levNPL.length;i++) if(_levNPL[i]!=null) _aiNPL=i;
+  if(_aiDK>=0) DK_ACT_JUN=_levDK[_aiDK];
+  if(_aiKY>=0) KY_ACT_JUN=_levKY[_aiKY];
+  if(_aiNPL>=0) NPL_ACT_JUN=_levNPL[_aiNPL];
+
+  // parse latest_date labels (e.g. "29 มิ.ย. 2569")
+  const _ldRaw = jd.latest_date || {};
+  for (const [res, ds] of Object.entries(_ldRaw)) {
+    if (!ds) continue;
+    const dt = new Date(ds + 'T00:00:00');
+    _latestDateLabel[res] = `${dt.getDate()} ${MO[dt.getMonth()]} ${dt.getFullYear() + 543}`;
+  }
 
   // populate main year dropdowns
   function _populateYrSel(selId,keys,thaiMap){
