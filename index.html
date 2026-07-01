@@ -721,7 +721,12 @@ let _THREE_LATEST_IDX=5, _PS_LATEST_IDX=5; // latest slot with ANY actual data (
 let _latestDateLabel={THREE:null,PS:null}; // e.g. "29 มิ.ย. 2569", populated from data.json
 // Star position: current calendar month (dynamic — auto-updates, no hardcoding needed)
 const _dnow=new Date(), STAR_MONTH_IDX=_dnow.getMonth(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
-const STAR_LABEL='★ วันที่ '+_dnow.getDate()+' '+['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][STAR_MONTH_IDX];
+// STAR_LABEL computed dynamically from data date (set after data loads); fallback = computer date
+function _mkStarLabel(dateStr){
+  if(dateStr){const p=dateStr.split(' ');return'★ วันที่ '+p[0]+' '+p[1];}
+  return'★ วันที่ '+_dnow.getDate()+' '+['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][STAR_MONTH_IDX];
+}
+let STAR_LABEL=_mkStarLabel(null); // placeholder; overwritten after data loads
 const THREE_OUT=[37.20,33.63,37.20,36.00,37.20,35.76,37.20,37.20,36.00,37.20,36.00,37.20];
 let KY_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
 let NPL_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
@@ -1224,7 +1229,7 @@ function updDK(){
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'&&i.text!==STAR_LABEL}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'&&item.parsed?.y!=null},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
+      plugins:{legend:{labels:{font:{size:10},boxWidth:9,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'&&i.text!==STAR_LABEL}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'&&item.parsed?.y!=null,callbacks:{label:ctx=>ctx.dataset.label+': '+f(ctx.parsed.y)+' MCM'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:31.7,text:'Dead Storage = 31.7 MCM',maxCap:{value:THREE_MAX,text:'Max Capacity = 318.1 MCM'}},yearDivPlugin:nYears===2},
       scales:{y:{min:0,max:THREE_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}
     },
   plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='● Actual'||ds.label===STAR_LABEL||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
@@ -1382,7 +1387,7 @@ function updPS(){
     {label:STAR_LABEL,data:starTodayLine,borderColor:_al(),backgroundColor:'transparent',fill:false,tension:0,borderWidth:0,pointRadius:0,order:-1},
     {label:'Max cap.',data:Array(n).fill(295),borderColor:'rgba(201,42,42,.4)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,order:99}
   ]},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'&&i.text!==STAR_LABEL}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'&&item.parsed?.y!=null},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
+    plugins:{legend:{labels:{font:{size:9},boxWidth:8,color:_tc(),filter:i=>!i.text.startsWith('_')&&i.text!=='Max cap.'&&i.text!==STAR_LABEL}},tooltip:{mode:'index',intersect:false,filter:item=>!item.dataset.label.startsWith('_')&&item.dataset.label!=='Max cap.'&&item.parsed?.y!=null,callbacks:{label:ctx=>ctx.dataset.label+': '+f(ctx.parsed.y)+' MCM'}},todayLine:true,filler:{drawTime:'beforeDatasetsDraw'},deadLabelPlugin:{value:20,text:'Dead Storage = 20 MCM',maxCap:{value:295,text:'Max Capacity = 295 MCM'}},yearDivPlugin:nYears===2},
     scales:{y:{min:0,max:PS_MAX*1.06,grid:{color:_gr()},ticks:_tk()},x:{grid:{color:_gr()},ticks:{font:{size:nYears===2?9:10},color:_tc()}}}},
   plugins:[{id:'decLabel',afterDatasetsDraw(chart){const{ctx,data}=chart;const n=data.labels.length;const decIdx=n>12?[11,23]:[11];ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';data.datasets.forEach((ds,di)=>{if(!ds.borderColor||ds.label==='Max cap.'||ds.label==='● Actual'||ds.label===STAR_LABEL||(ds.label&&ds.label.startsWith('_')))return;const meta=chart.getDatasetMeta(di);if(!meta.visible)return;decIdx.forEach(idx=>{const val=ds.data[idx];if(val==null)return;const pt=meta.data[idx];if(!pt)return;ctx.fillStyle=ds.borderColor;ctx.fillText(f(val)+' MCM',pt.x,pt.y-8);});});ctx.restore();}}]
 });
@@ -2074,6 +2079,8 @@ async function loadData(){
     const dt = new Date(ds + 'T00:00:00');
     _latestDateLabel[res] = `${dt.getDate()} ${MO[dt.getMonth()]} ${dt.getFullYear() + 543}`;
   }
+  // Update STAR_LABEL from actual data date (THREE takes priority, fallback PS)
+  STAR_LABEL = _mkStarLabel(_latestDateLabel.THREE || _latestDateLabel.PS || null);
 
   // populate main year dropdowns
   function _populateYrSel(selId,keys,thaiMap){
