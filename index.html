@@ -1044,15 +1044,21 @@ function runSc(tank,s,nYears=1){
   for(let i=0;i<n;i++){
     const mi=i%12;
     const isAct=i<ACT_IDX;
-    if(i===ACT_IDX){ // actual month Y1 anchor (dynamic)
-      const _todayMo=new Date().getMonth();
-      const rem=_todayMo>ACT_IDX?0:Math.max(0,1-STAR_PROGRESS); // 0 if anchor month is past
-      const srcInf=INF[getSrc(ACT_IDX)]||INF[Object.keys(INF)[0]];
-      const in_=r2(srcInf[ACT_IDX]*s.mult*rem);
-      const ex=r2(getEx(ACT_IDX)*rem);
+    if(i===ACT_IDX){ // เดือนสุดท้ายที่จบแล้ว — pass-through (rem=0 เพราะผ่านมาแล้ว)
+      const rem=0; // ACT_IDX = last complete month → เดือนนี้จบแล้ว ไม่ต้องคำนวณ
       const out5=getOut(ACT_IDX);
-      const end=r2(Math.min(MAX,Math.max(0,ACT_JUN+in_+ex-out5*rem)));
-      res.push({m:MO[ACT_IDX],begin:ACT_JUN,inflow:in_,extra:ex,outflow:r2(out5*rem),end,isAct:false,yr:0});
+      const end=r2(Math.min(MAX,Math.max(0,ACT_JUN+0+0-out5*rem)));
+      res.push({m:MO[ACT_IDX],begin:ACT_JUN,inflow:0,extra:0,outflow:0,end:ACT_JUN,isAct:false,yr:0});
+      cur=ACT_JUN;continue;
+    }
+    else if(i===STAR_MONTH_IDX&&i>ACT_IDX&&i<12){ // เดือนปัจจุบัน (ยังไม่จบ) — partial rem
+      const rem=Math.max(0,1-STAR_PROGRESS);
+      const srcInf=INF[getSrc(i)]||INF[Object.keys(INF)[0]];
+      const in_=r2(srcInf[mi]*s.mult*rem);
+      const ex=r2(getEx(i)*rem);
+      const out_=getOut(i);
+      const end=r2(Math.min(MAX,Math.max(0,cur+in_+ex-out_*rem)));
+      res.push({m:MO[mi],begin:r2(cur),inflow:in_,extra:ex,outflow:r2(out_*rem),end,isAct:false,yr:0});
       cur=end;continue;
     }
     const srcInf=INF[getSrc(i)]||INF[Object.keys(INF)[0]];
@@ -1193,7 +1199,7 @@ function updDK(){
 
   const scDatasets=multiSc.dk.map((s,si)=>{
     const sData=si===0?data:runSc('dk',s,nYears);
-    const fcastLine=sData.map((d,i)=>i<=_THREE_ACT_IDX?null:d.end);
+    const fcastLine=sData.map((d,i)=>i<_THREE_ACT_IDX?null:d.end); // เริ่มจาก ACT_IDX เพื่อเชื่อมกับดาว
     return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.35,borderWidth:2.5,
       pointRadius:fcastLine.map((v,i)=>v!=null?4:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
   });
@@ -1352,7 +1358,7 @@ function updPS(){
 
   const scDatasets=multiSc.ps.map((s,si)=>{
     const sData=si===0?data:runSc('ps',s,nYears);
-    const fcastLine=sData.map((d,i)=>i<=_PS_ACT_IDX?null:d.end);
+    const fcastLine=sData.map((d,i)=>i<_PS_ACT_IDX?null:d.end); // เริ่มจาก ACT_IDX เพื่อเชื่อมกับดาว
     return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.3,borderWidth:2.5,
       pointRadius:fcastLine.map((v,i)=>v!=null?3:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
   });
@@ -2022,8 +2028,11 @@ async function loadData(){
   let _aiTH=-1,_aiPS=-1;
   for(let i=0;i<_levTH.length;i++) if(_levTH[i]!=null) _aiTH=i;
   for(let i=0;i<_levPS.length;i++) if(_levPS[i]!=null) _aiPS=i;
-  if(_aiTH>=0){ THREE_ACT_JUN=_levTH[_aiTH]; _THREE_ACT_IDX=_aiTH; }
-  if(_aiPS>=0){ PS_ACT_JUN   =_levPS[_aiPS]; _PS_ACT_IDX  =_aiPS; }
+  if(_aiTH>=0){ THREE_ACT_JUN=_levTH[_aiTH]; } // latest actual reading (อาจเป็นวันนี้)
+  if(_aiPS>=0){ PS_ACT_JUN   =_levPS[_aiPS]; }
+  // ACT_IDX = เดือนสุดท้ายที่จบสมบูรณ์ = เดือนปัจจุบัน - 1 (ไม่ใช่ latest data slot)
+  _THREE_ACT_IDX=Math.max(0,STAR_MONTH_IDX-1);
+  _PS_ACT_IDX   =Math.max(0,STAR_MONTH_IDX-1);
   // individual DK/KY/NPL levels
   const _levDK=(lev.DK||{})[_curYrKey]||[], _levKY=(lev.KY||{})[_curYrKey]||[], _levNPL=(lev.NPL||{})[_curYrKey]||[];
   let _aiDK=-1,_aiKY=-1,_aiNPL=-1;
