@@ -1,0 +1,39 @@
+name: Update Water Data
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 09:00 Thai time (UTC+7)
+    - cron: '0 5 * * *'   # 12:00 Thai time (UTC+7)
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas openpyxl requests
+
+      - name: Fetch API data
+        run: python fetch_api_data.py
+
+      - name: Process data (update water_data.xlsx + data.json)
+        run: python process_data.py
+
+      - name: Commit updated files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json api_historical_raw.csv water_data.xlsx
+          git diff --staged --quiet && echo "No changes" || git commit -m "Auto-update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
