@@ -716,9 +716,8 @@ let PS_ACT_JUN=156.08;     // updated dynamically from data.json on load
 let DK_ACT_JUN=0, KY_ACT_JUN=0, NPL_ACT_JUN=0; // individual reservoir levels, updated from data.json
 let _THREE_ACT_IDX=5, _PS_ACT_IDX=5; // 0-based month index of latest actual data
 let _latestDateLabel={THREE:null,PS:null}; // e.g. "29 มิ.ย. 2569", populated from data.json
-// Star position: today's fraction through the current report month
-const STAR_MONTH_IDX=5; // มิ.ย. = index 5 in MO[]
-const _dnow=new Date(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
+// Star position: current calendar month (dynamic — auto-updates, no hardcoding needed)
+const _dnow=new Date(), STAR_MONTH_IDX=_dnow.getMonth(), STAR_PROGRESS=_dnow.getDate()/new Date(_dnow.getFullYear(),_dnow.getMonth()+1,0).getDate();
 const THREE_OUT=[37.20,33.63,37.20,36.00,37.20,35.76,37.20,37.20,36.00,37.20,36.00,37.20];
 let KY_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
 let NPL_IN={avg:Array(12).fill(0),avg5:Array(12).fill(0)};
@@ -954,6 +953,7 @@ function renderScList(tank){
   const SRCS=tank==='dk'?DK_SRCS:PS_SRCS;
   const addBtn=document.getElementById(tank+'-add-sc');
   if(addBtn) addBtn.style.display=multiSc[tank].length>=4?'none':'inline-flex';
+  const _actIdx=tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX;
   document.getElementById(tank+'-sc-list').innerHTML=multiSc[tank].map(s=>`
     <div class="sc-row">
       <div class="sc-row-head">
@@ -973,7 +973,7 @@ function renderScList(tank){
         ${multiSc[tank].length>1?`<button class="sc-rm" onclick="rmSc('${tank}',${s.id})">✕</button>`:''}
       </div>
       <div class="sc-months">
-        ${MO.map((m,i)=>i<5?
+        ${MO.map((m,i)=>i<=(tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX)?
           `<div class="sc-mo actual"><span class="sc-mo-lbl">${m}</span><span class="mo-act-tag">Actual</span></div>`:
           `<div class="sc-mo"><span class="sc-mo-lbl">${m}</span>
            <select onchange="(function(v){const sc=multiSc['${tank}'].find(x=>x.id===${s.id});for(let j=${i};j<12;j++)sc.srcs[j]=v;renderScList('${tank}');if('${tank}'==='dk')updDK();else updPS();})(this.value)">
@@ -995,13 +995,13 @@ function renderScList(tank){
         <span class="sc-out-lbl">Outflow ไหลออก</span>
         <div class="sc-out-inp-wrap">
           <input type="number" class="sc-out-inp" id="sod_${tank}_${s.id}"
-            value="${(s.outflow?s.outflow[5]:1.2).toFixed(2)}"
+            value="${(s.outflow?s.outflow[_actIdx+1]:1.2).toFixed(2)}"
             min="0" step="0.01"
             oninput="setScOutflow('${tank}',${s.id},parseFloat(this.value)||0)"
             placeholder="MCM/วัน">
           <span class="sc-out-unit">MCM/วัน</span>
         </div>
-        <span class="sc-out-hint">(มิ.ย.→ ธ.ค.)</span>
+        <span class="sc-out-hint">(${MO[_actIdx+1]}→ ธ.ค.)</span>
         <button class="sc-out-btn" onclick="openOutflowPopup('${tank}',${s.id})">
           <i class="ti ti-table-options" aria-hidden="true"></i> ปรับรายเดือน
         </button>
@@ -1010,13 +1010,13 @@ function renderScList(tank){
         <span class="sc-out-lbl">ผันน้ำเติม</span>
         <div class="sc-out-inp-wrap">
           <input type="number" class="sc-out-inp" id="sex_${tank}_${s.id}"
-            value="${(Array.isArray(s.extra)?s.extra[5]:s.extra||0).toFixed(2)}"
+            value="${(Array.isArray(s.extra)?s.extra[_actIdx+1]:s.extra||0).toFixed(2)}"
             min="0" step="0.01"
             oninput="setScExtra('${tank}',${s.id},parseFloat(this.value)||0)"
             placeholder="MCM/วัน">
           <span class="sc-out-unit">MCM/วัน</span>
         </div>
-        <span class="sc-out-hint">(มิ.ย.→ ธ.ค.)</span>
+        <span class="sc-out-hint">(${MO[_actIdx+1]}→ ธ.ค.)</span>
         <button class="sc-out-btn" style="border-color:var(--purple);color:var(--purple)" onclick="openExtraPopup('${tank}',${s.id})">
           <i class="ti ti-table-options" aria-hidden="true"></i> ปรับรายเดือน
         </button>
@@ -1045,7 +1045,8 @@ function runSc(tank,s,nYears=1){
     const mi=i%12;
     const isAct=i<ACT_IDX;
     if(i===ACT_IDX){ // actual month Y1 anchor (dynamic)
-      const rem=1-STAR_PROGRESS;
+      const _todayMo=new Date().getMonth();
+      const rem=_todayMo>ACT_IDX?0:Math.max(0,1-STAR_PROGRESS); // 0 if anchor month is past
       const srcInf=INF[getSrc(ACT_IDX)]||INF[Object.keys(INF)[0]];
       const in_=r2(srcInf[ACT_IDX]*s.mult*rem);
       const ex=r2(getEx(ACT_IDX)*rem);
@@ -1192,9 +1193,9 @@ function updDK(){
 
   const scDatasets=multiSc.dk.map((s,si)=>{
     const sData=si===0?data:runSc('dk',s,nYears);
-    const fcastLine=sData.map((d,i)=>i<5?null:d.end);
+    const fcastLine=sData.map((d,i)=>i<=_THREE_ACT_IDX?null:d.end);
     return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.35,borderWidth:2.5,
-      pointRadius:fcastLine.map((v,i)=>v!=null&&i>5?4:i===5?5:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
+      pointRadius:fcastLine.map((v,i)=>v!=null?4:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
   });
 
   kc('dklv');
@@ -1351,9 +1352,9 @@ function updPS(){
 
   const scDatasets=multiSc.ps.map((s,si)=>{
     const sData=si===0?data:runSc('ps',s,nYears);
-    const fcastLine=sData.map((d,i)=>i<5?null:d.end);
+    const fcastLine=sData.map((d,i)=>i<=_PS_ACT_IDX?null:d.end);
     return{label:s.label,data:fcastLine,borderColor:s.color,backgroundColor:s.color+'18',fill:false,tension:.3,borderWidth:2.5,
-      pointRadius:fcastLine.map((v,i)=>v!=null&&i>5?3:i===5?5:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
+      pointRadius:fcastLine.map((v,i)=>v!=null?3:0),pointBackgroundColor:s.color,pointBorderColor:'#fff',pointBorderWidth:2,order:1+si};
   });
 
   kc('pslv');
@@ -1747,7 +1748,7 @@ function setScOutflow(tank,scId,val){
   val=Math.max(0,parseFloat(val)||0);
   const sc=multiSc[tank].find(x=>x.id===scId);
   if(!sc) return;
-  for(let j=5;j<sc.outflow.length;j++) sc.outflow[j]=+val.toFixed(2);
+  for(let j=(tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX)+1;j<sc.outflow.length;j++) sc.outflow[j]=+val.toFixed(2);
   if(tank==='dk')updDK();else updPS();
 }
 
@@ -1757,7 +1758,7 @@ function setScExtra(tank,scId,val){
   const sc=multiSc[tank].find(x=>x.id===scId);
   if(!sc) return;
   if(!Array.isArray(sc.extra)) sc.extra=Array(12).fill(0);
-  for(let j=5;j<sc.extra.length;j++) sc.extra[j]=+val.toFixed(2);
+  for(let j=(tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX)+1;j<sc.extra.length;j++) sc.extra[j]=+val.toFixed(2);
   if(tank==='dk')updDK();else updPS();
 }
 
@@ -1770,9 +1771,11 @@ function _openPopup(tank,scId,field){
   if(!sc) return;
   const isExtra=field==='extra';
   document.getElementById('op-title').textContent=sc.label+(isExtra?' — ปรับผันน้ำเติมรายวัน':' — ปรับ Outflow รายวัน');
+  const _actIdx=tank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX;
+  const _actLbl='ม.ค.–'+MO[_actIdx], _fctLbl=MO[_actIdx+1]+'–ธ.ค.';
   document.getElementById('op-subtitle').textContent=isExtra
-    ?'ม.ค.–พ.ค. = ไม่มีการผันน้ำ (ล็อก 0) · มิ.ย.–ธ.ค. = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ'
-    :'ม.ค.–พ.ค. = Actual (ล็อก) · มิ.ย.–ธ.ค. = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ';
+    ?_actLbl+' = ไม่มีการผันน้ำ (ล็อก 0) · '+_fctLbl+' = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ'
+    :_actLbl+' = Actual (ล็อก) · '+_fctLbl+' = กรอก MCM/วัน ระบบคูณจำนวนวันให้อัตโนมัติ';
   renderPopGrid(sc,field);
   document.getElementById('op-overlay').classList.add('open');
 }
@@ -1786,7 +1789,7 @@ function renderPopGrid(sc,field){
   function mkCell(i){
     const mi=i%12;
     const val=arr[i]!=null?arr[i]:(isExtra?0:1.2);
-    const isActual=i<5;
+    const isActual=i<=(_popTank==='dk'?_THREE_ACT_IDX:_PS_ACT_IDX);
     const step='0.01';
     return`<div class="op-cell ${isActual?'op-actual':'op-forecast'}">
       <div class="op-mo">${MO[mi]}</div>
