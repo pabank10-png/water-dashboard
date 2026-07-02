@@ -826,17 +826,17 @@ const sum=a=>a.reduce((s,x)=>s+x,0);
 const CH={};
 function kc(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
 // ── per-tank table scenario state ──
-let _dkAllData=[],_dkTblSc=0;
-let _psAllData=[],_psTblSc=0;
+let _dkAllData=[],_dkTblSc=0,_dkActLevels=[];
+let _psAllData=[],_psTblSc=0,_psActLevels=[];
 function showDKTbl(idx){
   _dkTblSc=idx;
   document.querySelectorAll('#dk-tbl-sc-sel .tsc-pill').forEach((p,i)=>p.classList.toggle('active',i===idx));
-  if(_dkAllData[idx]) document.getElementById('tbl-dk').innerHTML=mkTbl(_dkAllData[idx],THREE_MAX,DK_CRIT);
+  if(_dkAllData[idx]) document.getElementById('tbl-dk').innerHTML=mkTbl(_dkAllData[idx],THREE_MAX,DK_CRIT,_dkActLevels);
 }
 function showPSTbl(idx){
   _psTblSc=idx;
   document.querySelectorAll('#ps-tbl-sc-sel .tsc-pill').forEach((p,i)=>p.classList.toggle('active',i===idx));
-  if(_psAllData[idx]) document.getElementById('tbl-ps').innerHTML=mkTbl(_psAllData[idx],PS_MAX,PS_CRIT);
+  if(_psAllData[idx]) document.getElementById('tbl-ps').innerHTML=mkTbl(_psAllData[idx],PS_MAX,PS_CRIT,_psActLevels);
 }
 function sm(rid,vid,v){document.getElementById(rid).value=v;document.getElementById(vid).textContent=v.toFixed(2)+'×';if(rid==='dk-m')updDK();else if(rid==='ps-m')updPS();}
 
@@ -1109,21 +1109,25 @@ function gauge(m,val,max,tag){
 function bi(icon,cls,val,lbl,sub){return`<div class="banner-item"><div class="bi ${cls}"><i class="ti ${icon}" aria-hidden="true"></i></div><div><div class="bv">${val}</div><div class="bl">${lbl}</div>${sub?`<div class="bs">${sub}</div>`:''}</div></div>`;}
 
 // ══ TABLE ══
-function mkTbl(data,max,crit){
+function mkTbl(data,max,crit,actLevels){
   const hasCrit=crit&&crit.length>=12;
-  let h=`<thead><tr><th>เดือน</th><th>ต้นเดือน</th><th>Inflow</th><th>ผันเพิ่ม</th><th>Outflow</th><th>สิ้นเดือน</th><th>%</th><th>สถานะ</th></tr></thead><tbody>`;
+  let h=`<thead><tr><th>เดือน</th><th>ต้นเดือน</th><th>Inflow</th><th>ผันเพิ่ม</th><th>Outflow</th><th>สิ้นอ่าง (Scenario)</th><th>สิ้นอ่าง (Actual+Scenario)</th><th>%</th><th>สถานะ</th></tr></thead><tbody>`;
   data.forEach((d,i)=>{
     const ci=i%12; // cyclic criteria index
-    const p=pct(d.end,max);
-    const col=hasCrit?scC(d.end,crit[ci]):sc(p);
-    const badge=hasCrit?bdgC(d.end,crit[ci]):(p>=70?'<span class="badge b-ok">ปกติ</span>':p>=40?'<span class="badge b-warn">เฝ้าระวัง</span>':'<span class="badge b-crit">วิกฤต</span>');
-    if(i===12) h+=`<tr><td colspan="8" style="text-align:center;font-size:10px;font-weight:700;color:#6b7a9e;padding:4px 8px;background:var(--surface2);border-top:2px dashed rgba(80,80,140,.35)">── ปีที่ 2 ──</td></tr>`;
+    const actVal=(actLevels&&actLevels[i]!=null)?actLevels[i]:null;
+    const dispEnd=actVal!=null?actVal:d.end; // Actual where available, else Scenario
+    const p=pct(dispEnd,max);
+    const col=hasCrit?scC(dispEnd,crit[ci]):sc(p);
+    const badge=hasCrit?bdgC(dispEnd,crit[ci]):(p>=70?'<span class="badge b-ok">ปกติ</span>':p>=40?'<span class="badge b-warn">เฝ้าระวัง</span>':'<span class="badge b-crit">วิกฤต</span>');
+    if(i===12) h+=`<tr><td colspan="9" style="text-align:center;font-size:10px;font-weight:700;color:#6b7a9e;padding:4px 8px;background:var(--surface2);border-top:2px dashed rgba(80,80,140,.35)">── ปีที่ 2 ──</td></tr>`;
     const rowStyle=d.isAct?' class="tr-actual"':'';
+    const scCol=hasCrit?scC(d.end,crit[ci]):sc(pct(d.end,max));
     h+=`<tr${rowStyle}><td class="tdm">${d.m}${d.isAct?'<span style="font-size:9px;color:#888;margin-left:4px">●</span>':''}</td>
     <td>${f(d.begin)}</td><td class="tdh">${f(d.inflow)}</td>
     <td style="color:${d.extra>0?'#7048e8':'var(--text3)'}">${d.extra>0?'+'+f(d.extra):'—'}</td>
     <td class="tdl">${f(d.outflow)}</td>
-    <td><b style="color:${col}">${f(d.end)}</b><div class="mbar"><div class="mbar-f" style="width:${p}%;background:${col}"></div></div></td>
+    <td style="color:${scCol};opacity:.75">${f(d.end)}</td>
+    <td><b style="color:${col}">${f(dispEnd)}</b><div class="mbar"><div class="mbar-f" style="width:${p}%;background:${col}"></div></div></td>
     <td style="color:${col};font-weight:700">${p}%</td><td>${badge}</td></tr>`;
   });
   function _totRow(slice,label){
@@ -1137,7 +1141,7 @@ function mkTbl(data,max,crit){
       <td class="tdh"><b>${f(ti)}</b></td>
       <td style="color:${te>0?'#7048e8':'var(--text3)'}">${te>0?'+'+f(te):'—'}</td>
       <td class="tdl"><b>${f(to)}</b></td>
-      <td colspan="3">—</td>
+      <td colspan="4">—</td>
     </tr>`;
   }
   h+=`</tbody><tfoot>`;
@@ -1202,6 +1206,7 @@ function updDK(){
   const n=12*nYears;
   const _levTHR3=((jd?.level_end?.THREE)||{})[_yrK]||[];
   const actualLine=data.map((d,i)=>i<_THREE_ACT_IDX?(_levTHR3[i]??null):(i===_THREE_ACT_IDX?THREE_ACT_JUN:null));
+  _dkActLevels=actualLine;
   const starTodayLine=Array(n).fill(null);if(STAR_MONTH_IDX<n)starTodayLine[STAR_MONTH_IDX]=THREE_TODAY_LVL;
   const bands=mkBands(DK_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
@@ -1266,7 +1271,7 @@ function updDK(){
   if(_dkTblSc>=allDK.length) _dkTblSc=0;
   const dkSelEl=document.getElementById('dk-tbl-sc-sel');
   if(dkSelEl) dkSelEl.innerHTML=multiSc.dk.map((s,i)=>`<button class="tsc-pill${i===_dkTblSc?' active':''}" style="--sc-col:${s.color}" onclick="showDKTbl(${i})">${s.label}</button>`).join('');
-  document.getElementById('tbl-dk').innerHTML=mkTbl(_dkAllData[_dkTblSc],THREE_MAX,DK_CRIT);
+  document.getElementById('tbl-dk').innerHTML=mkTbl(_dkAllData[_dkTblSc],THREE_MAX,DK_CRIT,_dkActLevels);
 }
 
 // ── TODAY DIVIDER LINE (drawn at STAR_PROGRESS between STAR_MONTH_IDX-1 and STAR_MONTH_IDX) ──
@@ -1364,6 +1369,7 @@ function updPS(){
   const n=12*nYears;
   const _levPS3=((jd?.level_end?.PS)||{})[_yrKP]||[];
   const actualLine=data.map((d,i)=>i<_PS_ACT_IDX?(_levPS3[i]??null):(i===_PS_ACT_IDX?PS_ACT_JUN:null));
+  _psActLevels=actualLine;
   const starTodayLine=Array(n).fill(null);if(STAR_MONTH_IDX<n)starTodayLine[STAR_MONTH_IDX]=PS_TODAY_LVL;
   const psBands=mkBands(PS_CRIT,.35,nYears);
   const labels=_simLabels(nYears);
@@ -1423,7 +1429,7 @@ function updPS(){
   if(_psTblSc>=allPS.length) _psTblSc=0;
   const psSelEl=document.getElementById('ps-tbl-sc-sel');
   if(psSelEl) psSelEl.innerHTML=multiSc.ps.map((s,i)=>`<button class="tsc-pill${i===_psTblSc?' active':''}" style="--sc-col:${s.color}" onclick="showPSTbl(${i})">${s.label}</button>`).join('');
-  document.getElementById('tbl-ps').innerHTML=mkTbl(_psAllData[_psTblSc],PS_MAX,PS_CRIT);
+  document.getElementById('tbl-ps').innerHTML=mkTbl(_psAllData[_psTblSc],PS_MAX,PS_CRIT,_psActLevels);
 }
 
 // ══ INFLOW TAB ══
