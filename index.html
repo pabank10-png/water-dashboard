@@ -406,6 +406,9 @@ body.dark .yl-actual{background:#f0f0f0}
     <span class="hpill green"><span class="pulse"></span>Live</span>
     <span class="hpill" id="hpill-date"><i class="ti ti-calendar-event" style="font-size:13px" aria-hidden="true"></i></span>
     <a href="https://github.com/pabank10-png/water-dashboard/raw/main/water_data.xlsx" download class="hpill" style="text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Download Water_Data.xlsx"><i class="ti ti-download" style="font-size:13px" aria-hidden="true"></i>Download all Data</a>
+    <button class="hpill" onclick="exportSettings()" title="Export Scenario Settings เป็น JSON"><i class="ti ti-file-export" style="font-size:13px" aria-hidden="true"></i>Export</button>
+    <button class="hpill" id="import-btn" onclick="document.getElementById('sc-import-input').click()" title="Import Scenario Settings จากไฟล์ JSON"><i class="ti ti-file-import" style="font-size:13px" aria-hidden="true"></i>Import</button>
+    <input type="file" id="sc-import-input" accept=".json" style="display:none" onchange="importSettings(event)">
     <script>
       (function(){
         const MO_TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -2101,6 +2104,87 @@ async function loadData(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{ loadData(); });
+
+// ── EXPORT / IMPORT SETTINGS ──────────────────────────────
+function exportSettings(){
+  const payload={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    simYears:{dk:_simYears.dk,ps:_simYears.ps},
+    multiSc:{
+      dk:multiSc.dk.map(s=>({
+        id:s.id,label:s.label,color:s.color,
+        mult:s.mult,mult2:s.mult2,
+        srcs:[...s.srcs],
+        outflow:[...s.outflow],
+        extra:[...(Array.isArray(s.extra)?s.extra:Array(12).fill(s.extra||0))]
+      })),
+      ps:multiSc.ps.map(s=>({
+        id:s.id,label:s.label,color:s.color,
+        mult:s.mult,mult2:s.mult2,
+        srcs:[...s.srcs],
+        outflow:[...s.outflow],
+        extra:[...(Array.isArray(s.extra)?s.extra:Array(12).fill(s.extra||0))]
+      }))
+    }
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const d=new Date();
+  a.download='water-scenario-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importSettings(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.version||!data.multiSc||!data.simYears){
+        alert('ไฟล์ไม่ถูกต้อง — กรุณาใช้ไฟล์ที่ Export จาก Dashboard นี้');
+        return;
+      }
+      // Apply nYears
+      ['dk','ps'].forEach(t=>{
+        const n=data.simYears[t]||1;
+        _simYears[t]=n;
+        const b1=document.getElementById(t+'-yr1-btn'),b2=document.getElementById(t+'-yr2-btn');
+        if(b1&&b2){b1.classList.toggle('active',n===1);b2.classList.toggle('active',n===2);}
+      });
+      // Apply scenarios
+      ['dk','ps'].forEach(tank=>{
+        if(!data.multiSc[tank]) return;
+        multiSc[tank]=data.multiSc[tank].map(s=>({
+          id:s.id,label:s.label,color:s.color,
+          mult:s.mult??1.0,mult2:s.mult2??1.0,
+          srcs:[...(s.srcs||Array(12).fill('avg'))],
+          outflow:[...(s.outflow||[])],
+          extra:[...(Array.isArray(s.extra)?s.extra:Array(12).fill(s.extra||0))]
+        }));
+        scNext[tank]=Math.max(...multiSc[tank].map(s=>s.id))+1;
+      });
+      renderScList('dk');
+      renderScList('ps');
+      updDK();
+      updPS();
+      // Flash success on button
+      const btn=document.getElementById('import-btn');
+      const orig=btn.innerHTML;
+      btn.innerHTML='<i class="ti ti-check" style="font-size:13px"></i>Imported!';
+      btn.style.color='var(--green)';
+      setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';},2500);
+    }catch(err){
+      alert('อ่านไฟล์ไม่ได้ — ตรวจสอบว่าเป็นไฟล์ JSON ที่ถูกต้อง');
+    }
+    e.target.value=''; // reset so same file can be re-imported
+  };
+  reader.readAsText(file);
+}
 </script>
 </body>
 </html>
