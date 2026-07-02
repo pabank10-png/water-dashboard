@@ -68,3 +68,5 @@ cron-job.org (09:00 & 12:00 Asia/Bangkok ทุกวัน)
 | 2026-07-02 | Fix tension:0, แยก tooltip ● vs ★, STAR_LABEL dynamic |
 | 2026-07-02 | เพิ่ม Export / Import Scenario Settings |
 | 2026-07-02 | ย้าย schedule trigger → cron-job.org (09:00 & 12:00) |
+| 2026-07-02 | fix: มิ.ย. (ACT_IDX) แสดง inflow/outflow จาก Scenario แทนค่า 0 |
+| 2026-07-02 | ตาราง Monthly Balance เพิ่มคอลัมน์ สิ้นอ่าง (Actual+Scenario) และ สิ้นอ่าง (Scenario) |
