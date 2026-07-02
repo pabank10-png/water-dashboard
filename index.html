@@ -1056,15 +1056,8 @@ function runSc(tank,s,nYears=1){
   let cur=INIT;const res=[];
   for(let i=0;i<n;i++){
     const mi=i%12;
-    const isAct=i<ACT_IDX;
-    if(i===ACT_IDX){ // เดือนสุดท้ายที่จบแล้ว — pass-through (rem=0 เพราะผ่านมาแล้ว)
-      const rem=0; // ACT_IDX = last complete month → เดือนนี้จบแล้ว ไม่ต้องคำนวณ
-      const out5=getOut(ACT_IDX);
-      const end=r2(Math.min(MAX,Math.max(0,ACT_JUN+0+0-out5*rem)));
-      res.push({m:MO[ACT_IDX],begin:ACT_JUN,inflow:0,extra:0,outflow:0,end:ACT_JUN,isAct:false,yr:0});
-      cur=ACT_JUN;continue;
-    }
-    else if(i===STAR_MONTH_IDX&&i>ACT_IDX&&i<12){ // เดือนปัจจุบัน (ยังไม่จบ) — partial rem
+    const isAct=i<=ACT_IDX; // ACT_IDX (มิ.ย.) แสดงเหมือนเดือนก่อน — scenario inflow/outflow, extra=0
+    if(i===STAR_MONTH_IDX&&i>ACT_IDX&&i<12){ // เดือนปัจจุบัน (ยังไม่จบ) — partial rem
       // ใช้ TODAY_LVL (ระดับน้ำวันนี้จริง) เป็น anchor แทน cur (สิ้นเดือนก่อน)
       // เพราะ 8 ส.ค. เราวัดได้จริง → forecast เฉพาะวันที่เหลือ (rem = 23/31)
       const rem=Math.max(0,1-STAR_PROGRESS);
