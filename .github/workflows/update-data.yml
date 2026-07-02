@@ -1,10 +1,7 @@
 name: Update Water Data
 
 on:
-  schedule:
-    - cron: '0 2 * * *'   # 09:00 Thai time (UTC+7)
-    - cron: '0 5 * * *'   # 12:00 Thai time (UTC+7)
-  workflow_dispatch:
+  workflow_dispatch:  # Triggered by cron-job.org at 09:00 and 12:00 Asia/Bangkok
 
 jobs:
   update:
