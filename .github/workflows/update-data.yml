@@ -1,7 +1,7 @@
 name: Update Water Data
 
 on:
-  workflow_dispatch:  # Triggered by cron-job.org at 09:00 and 12:00 Asia/Bangkok
+  workflow_dispatch:  # Triggered by cron-job.org at 09:00, 10:00 and 12:00 Asia/Bangkok
 
 jobs:
   update:
